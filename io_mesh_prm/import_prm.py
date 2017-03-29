@@ -50,7 +50,7 @@ def load_prm_file(file):
     for vert in range(vertex_count):
       location = struct.unpack('fff', file.read(12))
       normal = struct.unpack('fff', file.read(12))
-      bm.verts.new((location[0] * 0.01, location[1] * 0.01, location[2] * 0.01)) # RV units are giant!!
+      bm.verts.new((location[0] * 0.01, location[2] * 0.01, location[1] * -0.01)) # RV units are giant!!
     
     # ensure lookup table before continuing
     bm.verts.ensure_lookup_table()
@@ -95,6 +95,9 @@ def load_prm_file(file):
       # tag faces  with flags
       #face.tag = flags
       
+      # flip normals
+      face.normal_flip()
+      
     # calculate normals
     bm.normal_update()
     
@@ -102,6 +105,8 @@ def load_prm_file(file):
     bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
     bm.to_mesh(me)
     bm.free()
+    
+
       
 
 ######################################################
