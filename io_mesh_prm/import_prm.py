@@ -33,6 +33,7 @@ def load_prm_file(file):
     uv_layer = bm.loops.layers.uv.new("uv")    
     vc_layer = bm.loops.layers.color.new("color")
     va_layer = bm.loops.layers.color.new("alpha")
+    flag_layer = bm.loops.layers.int.new("flags")
     
     scn.objects.link(ob)
     scn.objects.active = ob
@@ -78,25 +79,22 @@ def load_prm_file(file):
       colors = struct.unpack('<BBBBBBBBBBBBBBBB', file.read(16))
       uvs = struct.unpack('ffffffff', file.read(32))
       
-      # set uvs
-      for uv_set_loop in range(num_loops):
-        uv = (uvs[uv_set_loop * 2], 1 - uvs[uv_set_loop * 2 + 1])
-        face.loops[uv_set_loop][uv_layer].uv = uv
+      for loop in range(num_loops):
+        # set uvs
+        uv = (uvs[loop * 2], 1 - uvs[loop * 2 + 1])
+        face.loops[loop][uv_layer].uv = uv
         
-      # set colors
-      for color_set_loop in range(num_loops):
-        color_idx = color_set_loop * 4
+        # set colors
+        color_idx = loop * 4
         color_b = float(colors[color_idx]) / 255
         color_g = float(colors[color_idx + 1]) / 255
         color_r = float(colors[color_idx + 2]) / 255
         color_a = float(colors[color_idx + 3]) / 255
         
         # apply colors and alpha to layers
-        face.loops[color_set_loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
-        face.loops[color_set_loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
-
-      # tag faces  with flags
-      #face.tag = flags
+        face.loops[loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
+        face.loops[loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
+        face.loops[loop][flag_layer] = flags
       
       # flip normals
       face.normal_flip()
