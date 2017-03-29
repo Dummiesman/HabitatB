@@ -29,9 +29,10 @@ def load_prm_file(file):
     bm = bmesh.new()
     bm.from_mesh(me)
 
-    # create layers
-    uv_layer = bm.loops.layers.uv.new()    
-    vc_layer = bm.loops.layers.color.new()
+    # create layers and set names
+    uv_layer = bm.loops.layers.uv.new("uv")    
+    vc_layer = bm.loops.layers.color.new("color")
+    va_layer = bm.loops.layers.color.new("alpha")
     
     scn.objects.link(ob)
     scn.objects.active = ob
@@ -85,12 +86,14 @@ def load_prm_file(file):
       # set colors
       for color_set_loop in range(num_loops):
         color_idx = color_set_loop * 4
-        color_r = float(colors[color_idx] + 1) / 255
-        color_g = float(colors[color_idx] + 2) / 255
-        color_b = float(colors[color_idx] + 3) / 255
-        color_a = float(colors[color_idx] + 4) / 255
+        color_b = float(colors[color_idx]) / 255
+        color_g = float(colors[color_idx + 1]) / 255
+        color_r = float(colors[color_idx + 2]) / 255
+        color_a = float(colors[color_idx + 3]) / 255
         
+        # apply colors and alpha to layers
         face.loops[color_set_loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
+        face.loops[color_set_loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
 
       # tag faces  with flags
       #face.tag = flags
