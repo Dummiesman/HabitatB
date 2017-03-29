@@ -33,7 +33,7 @@ def load_prm_file(file):
     uv_layer = bm.loops.layers.uv.new("uv")    
     vc_layer = bm.loops.layers.color.new("color")
     va_layer = bm.loops.layers.color.new("alpha")
-    flag_layer = bm.loops.layers.int.new("flags")
+    flag_layer = bm.faces.layers.int.new("flags")
     
     scn.objects.link(ob)
     scn.objects.active = ob
@@ -94,7 +94,7 @@ def load_prm_file(file):
         # apply colors and alpha to layers
         face.loops[loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
         face.loops[loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
-        face.loops[loop][flag_layer] = flags
+        face[flag_layer] = flags
       
       # flip normals
       face.normal_flip()
