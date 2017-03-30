@@ -45,10 +45,13 @@ def save_prm_file(file, ob):
       is_quad = len(face.verts) > 3
       
       # get the flag layer (bit field)
-      flags_b0 = int(face.loops[0][flag_layer][0] * 255.0)
-      flags_b1 = int(face.loops[0][flag_layer][2] * 255.0)
-      flags_ba = bytearray([flags_b0, flags_b1])
-      flags_int = int.from_bytes(flags_ba, byteorder='little', signed=False)
+      if flag_layer:
+        flags_b0 = int(face.loops[0][flag_layer][0] * 255.0)
+        flags_b1 = int(face.loops[0][flag_layer][2] * 255.0)
+        flags_ba = bytearray([flags_b0, flags_b1])
+        flags_int = int.from_bytes(flags_ba, byteorder='little', signed=False)
+      else:
+        flags_int = 0 # if no flag layer is present, don't set any flags
 
       # set the quad-flag if the poly is quadratic
       if is_quad:
@@ -73,15 +76,16 @@ def save_prm_file(file, ob):
       # write the vertex colors
       for i in vert_order:
         if i < len(face.verts):
-          color = face.loops[i][vc_layer]
-          alpha = face.loops[i][va_layer]
+          # get color from the channel or fall back to a default value
+          color = face.loops[i][vc_layer] if vc_layer else mathutils.Color((1, 1, 1))
+          alpha = face.loops[i][va_layer] if va_layer else mathutils.Color((1, 1, 1))
           file.write(struct.pack("<BBBB", int(color.b * 255), int(color.g * 255), int(color.r * 255), int((1.0 - alpha.v) * 255)))
         else:
           file.write(struct.pack("<BBBB", 1, 1, 1, 1)) # write opaque white as default
 
       # write the uv
       for i in vert_order:
-        if i < len(face.verts):
+        if i < len(face.verts) and uv_layer:
           uv = face.loops[i][uv_layer].uv
           file.write(struct.pack("<ff", uv[0], 1 - uv[1]))
         else:
