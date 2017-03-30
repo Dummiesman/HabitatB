@@ -36,7 +36,7 @@ def save_prm_file(file, ob):
     uv_layer = bm.loops.layers.uv.active
     vc_layer = bm.loops.layers.color.get("color")
     va_layer = bm.loops.layers.color.get("alpha")
-    flag_layer = bm.faces.layers.int.get("flags")
+    flag_layer = bm.loops.layers.color.get("flags")
 
     # go through all polygons
     for face in bm.faces:
@@ -45,14 +45,17 @@ def save_prm_file(file, ob):
       is_quad = len(face.verts) > 3
       
       # get the flag layer (bit field)
-      face_flags = face[flag_layer]
+      flags_b0 = int(face.loops[0][flag_layer][0] * 255.0)
+      flags_b1 = int(face.loops[0][flag_layer][2] * 255.0)
+      flags_ba = bytearray([flags_b0, flags_b1])
+      flags_int = int.from_bytes(flags_ba, byteorder='little', signed=False)
 
       # set the quad-flag if the poly is quadratic
       if is_quad:
-        face_flags |= 0x001
+        flags_int |= 0x001
 
       # write the flags
-      file.write(struct.pack("<h", face_flags))
+      file.write(struct.pack("<H", flags_int))
 
       # write the texture
       file.write(struct.pack("<h", 0))
