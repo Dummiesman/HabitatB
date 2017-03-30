@@ -63,9 +63,9 @@ def save_prm_file(file, ob):
       # write indices
       for i in vert_order:
         if i < len(face.verts):
-          file.write(struct.pack("<h", face.verts[i].index))
+          file.write(struct.pack("<H", face.verts[i].index))
         else:
-          file.write(struct.pack("<h", 0))
+          file.write(struct.pack("<H", 0))
 
       # write the vertex colors
       for i in vert_order:
