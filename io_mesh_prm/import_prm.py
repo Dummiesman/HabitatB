@@ -98,7 +98,7 @@ def load_prm_file(file):
           color_b = float(colors[color_idx]) / 255
           color_g = float(colors[color_idx + 1]) / 255
           color_r = float(colors[color_idx + 2]) / 255
-          color_a = float(colors[color_idx + 3]) / 255
+          color_a = 1.0 - (float(colors[color_idx + 3]) / 255)
           
           # apply colors and alpha to layers
           face.loops[loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
