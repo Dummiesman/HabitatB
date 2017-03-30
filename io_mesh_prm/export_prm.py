@@ -14,10 +14,6 @@ import bpy, bmesh, mathutils
 
 
 ######################################################
-# EXPORT HELPERS
-######################################################
-
-######################################################
 # EXPORT MAIN FILES
 ######################################################
 
@@ -31,15 +27,10 @@ def save_prm_file(file, ob):
     bm = bmesh.new()
     bm.from_mesh(mesh)
 
-    # list of faces and vertices
-    faces = list(bm.faces)
-    vertices = list(bm.verts)
-
-    poly_count = len(faces)
-    vertex_count = len(vertices)
-
     # write amount of polygons and vertices
-    file.write(struct.pack("<hh", poly_count, vertex_count))
+    poly_count = len(bm.faces)
+    vertex_count = len(bm.verts)
+    file.write(struct.pack("<HH", poly_count, vertex_count))
 
     # get layers
     uv_layer = bm.loops.layers.uv.active
@@ -48,12 +39,10 @@ def save_prm_file(file, ob):
     flag_layer = bm.faces.layers.int.get("flags")
 
     # go through all polygons
-    for poly in range(poly_count):
-      bm.faces.ensure_lookup_table() # apparently needed now? blender sometimes prompts to call the function
-      face = faces[poly]
-
+    for face in bm.faces:
+      # get flags 
       # figure out whether the face is quad
-      is_quad = 1 if len(face.verts) > 3 else 0
+      is_quad = len(face.verts) > 3
       
       # get the flag layer (bit field)
       face_flags = face[flag_layer]
@@ -68,11 +57,13 @@ def save_prm_file(file, ob):
       # write the texture
       file.write(struct.pack("<h", 0))
 
-      # write the vertex indices
+      # get vertex order
       vert_order = [2, 1, 0, 3] if not is_quad else [3, 2, 1, 0]
+      
+      # write indices
       for i in vert_order:
         if i < len(face.verts):
-          file.write(struct.pack("<h", vertices.index(face.verts[i])))
+          file.write(struct.pack("<h", face.verts[i].index))
         else:
           file.write(struct.pack("<h", 0))
 
@@ -94,12 +85,11 @@ def save_prm_file(file, ob):
           file.write(struct.pack("<ff", 0, 0))
 
     # export vertex positions and normals
-    for v in range(vertex_count):
-      vertex = vertices[v]
-      coord = mathutils.Vector((vertex.co[0]*100, vertex.co[2]*-100, vertex.co[1]*100))
-      normal = mathutils.Vector((vertex.normal[0], vertex.normal[1], vertex.normal[2]))
-      file.write(struct.pack("<fff", coord[0], coord[1], coord[2]))
-      file.write(struct.pack("<fff", normal[0], normal[1], normal[2]))
+    for vertex in bm.verts:
+      coord = (vertex.co[0] * 100, vertex.co[2] * -100, vertex.co[1] * 100)
+      normal = (vertex.normal[0], vertex.normal[2] * -1, vertex.normal[1])
+      file.write(struct.pack("<fff", *coord))
+      file.write(struct.pack("<fff", *normal))
 
     # free the bmesh
     bm.free()
@@ -111,19 +101,17 @@ def save_prm_file(file, ob):
 ######################################################
 def save_prm(filepath,
              context):
-
-
+             
     time1 = time.clock()
 
-    ob = bpy.context.selected_objects[0]
+    ob = bpy.context.active_object
     print("exporting PRM: {} as {}...".format(str(ob), filepath))
 
-    # write prm
+    # write the actual data
     file = open(filepath, 'wb')
     save_prm_file(file, ob)
     file.close()
-
-      
+     
     # prm export complete
     print(" done in %.4f sec." % (time.clock() - time1))
 
@@ -135,7 +123,7 @@ def save(operator,
          ):
   
     
-    # save BND
+    # save PRM file
     save_prm(filepath,
              context
              )
