@@ -6,6 +6,4 @@ A set of Blender tools for Re-Volt. Built for Blender 2.78+
 List of currently supported features:
 + Import and export PRM
 
-Current issues:
-+ No texture will be loaded and the PRM texture int will be set to 0 (no problem for cars)
-+ PRM LoDs won't be loaded
+[Current issues](https://github.com/Dummiesman/HabitatB/issues)
