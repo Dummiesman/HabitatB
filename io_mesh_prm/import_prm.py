@@ -63,42 +63,55 @@ def load_prm_file(file):
       flags, texture = struct.unpack('<Hh', file.read(4))
       indices = struct.unpack('<HHHH', file.read(8))
       
-      # check if we have a quad
-      is_quad = (flags & 0x001)
-      num_loops = 4 if is_quad else 3
-      
-      # faces are reversed also
-      if is_quad:
-        face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]], bm.verts[indices[3]]))
-        face.smooth = True
-      else:
-        face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]])) 
-        face.smooth = True
-      
       # read colors and uvs
       colors = struct.unpack('<BBBBBBBBBBBBBBBB', file.read(16))
       uvs = struct.unpack('ffffffff', file.read(32))
       
-      for loop in range(num_loops):
-        # set uvs
-        uv = (uvs[loop * 2], 1 - uvs[loop * 2 + 1])
-        face.loops[loop][uv_layer].uv = uv
+      # check if we have a quad
+      is_quad = (flags & 0x001)
+      num_loops = 4 if is_quad else 3
+
+      # is this quad actually a triangle?
+      if is_quad and len(set(indices)) == 3:
+        is_quad = False
+
+      # check if it's a valid face
+      if len(set(indices)) > 2:
+        existing_face = bm.faces.get([bm.verts[i] for i in (indices if is_quad else indices[:3])])
+
+        # faces are reversed also
+        try:
+          if is_quad:
+            face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]], bm.verts[indices[3]]))
+            face.smooth = True
+          else:
+            face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]])) 
+            face.smooth = True
+
+          for loop in range(num_loops):
+            # set uvs
+            uv = (uvs[loop * 2], 1 - uvs[loop * 2 + 1])
+            face.loops[loop][uv_layer].uv = uv
+            
+            # set colors
+            color_idx = loop * 4
+            color_b = float(colors[color_idx]) / 255
+            color_g = float(colors[color_idx + 1]) / 255
+            color_r = float(colors[color_idx + 2]) / 255
+            color_a = float(colors[color_idx + 3]) / 255
+            
+            # apply colors and alpha to layers
+            face.loops[loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
+            face.loops[loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
+            face[flag_layer] = flags
+        except ValueError as e:
+          print(e)
+          # set existing face as double-sided
+          existing_face[flag_layer] |= 0x002
         
-        # set colors
-        color_idx = loop * 4
-        color_b = float(colors[color_idx]) / 255
-        color_g = float(colors[color_idx + 1]) / 255
-        color_r = float(colors[color_idx + 2]) / 255
-        color_a = float(colors[color_idx + 3]) / 255
+        # flip normals
+        face.normal_flip()
         
-        # apply colors and alpha to layers
-        face.loops[loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
-        face.loops[loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
-        face[flag_layer] = flags
-      
-      # flip normals
-      face.normal_flip()
-      
     # calculate normals
     bm.normal_update()
     
