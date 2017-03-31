@@ -7,6 +7,7 @@
 #
 # ##### END LICENSE BLOCK #####
 
+
 bl_info = {
     "name": "HabitiatB - Re-Volt PRM",
     "author": "Dummiesman, Yethiel",
@@ -20,7 +21,9 @@ bl_info = {
     "support": 'COMMUNITY',
     "category": "Import-Export"}
 
+
 import bpy
+import bmesh
 from bpy.props import (
         BoolProperty,
         EnumProperty,
@@ -32,6 +35,21 @@ from bpy_extras.io_utils import (
         ImportHelper,
         ExportHelper,
         )
+from . import helpers
+
+prop_states = [0, 0, 0, 0, 0, 0]
+
+"""
+flag_names = ["Invisible", "Mirroring", 
+        "No EnvMap", "Double-Sided", 
+        "Additive Blending", "EnvMap", 
+        "Translucent", "Texture Animation", 
+        "Cloth Effect"
+        ]
+"""
+flag_names = ["Quadratic", "Double-Sided", "Transparent", "Alpha/Additive", "No EnvMap", "EnvMap"]
+
+flags = [0x001, 0x002, 0x004, 0x100, 0x400, 0x800]
 
 class ImportPRM(bpy.types.Operator, ImportHelper):
     """Import from PRM file format (.prm, .m)"""
@@ -61,7 +79,7 @@ class ExportPRM(bpy.types.Operator, ExportHelper):
     bl_idname = "export_scene.prm"
     bl_label = 'Export PRM'
 
-    filename_ext = ".prm"
+    filename_ext = ""
     filter_glob = StringProperty(
             default="*.prm;*.m",
             options={'HIDDEN'},
@@ -78,6 +96,116 @@ class ExportPRM(bpy.types.Operator, ExportHelper):
                                     
         return export_prm.save(self, context, **keywords)
 
+class RevoltPropertiesPanel(bpy.types.Panel):
+    bl_label = "Re-Volt Properties"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "data"
+
+    @classmethod
+    def poll(cls, context):
+        # Only allow in edit mode for a selected mesh.
+        # it might be better to show this panel all the time and just show a warning when not in edit mode
+        return context.mode == "EDIT_MESH" and context.object is not None and context.object.type == "MESH"
+ 
+    def draw(self, context):
+        obj = context.object
+        bm = bmesh.from_edit_mesh(obj.data)
+        selection = bm.select_history #FIXME: Not the actual selection
+        flag_layer = bm.loops.layers.color.get("flags")
+
+        if flag_layer is None:
+            row = self.layout.row()
+            row.label(text="Please create a properties layer.", icon='INFO')
+            row = self.layout.row()
+            row.operator("properties.create_layer", icon='PLUS')
+
+        elif selection:
+            # number of selected faces
+            self.layout.row().label(text="{} faces selected.".format(len(selection)))
+            row = self.layout.row()
+            row.label(text="Toggle Property")
+            row.label(text="Status")
+            # list of properties and buttons, create a button for each
+            for prop in range(len(flag_names)):
+                # create a new row
+                row = self.layout.row()
+                # place a button
+                row.operator("properties.set_prop", icon='NONE', text=flag_names[prop]).number=prop
+                # place a status label
+                num_set = 0
+                for face in selection:
+                    bf = helpers.vc_to_bitfield(face.loops[0][flag_layer])
+                    if bf & flags[prop]: # check if the flag is checked
+                        num_set += 1
+                if num_set == 0: # none are set
+                    ico = "X"
+                    txt = "Not set"
+                    prop_states[prop] = 1 # enable all on button press
+                elif num_set == len(selection): # all are set
+                    ico = "FILE_TICK"
+                    txt = "Set"
+                    prop_states[prop] = 0 # disable all on button press
+                else: # some are set
+                    ico = "DOTSDOWN"
+                    txt = "Set for {} of {}".format(num_set, len(selection))
+                    prop_states[prop] = 1 # enable all on button press
+
+                row.label(text=txt, icon=ico)
+
+        else:
+            self.layout.row().label(text="Select at least one face.", icon='INFO')
+
+
+           
+class ButtonPropertiesCreateLayer(bpy.types.Operator):
+    bl_idname = "properties.create_layer"
+    bl_label = "Create properties (flags) layer"
+    number = bpy.props.IntProperty()
+    row = bpy.props.IntProperty()
+    loc = bpy.props.StringProperty()
+ 
+    def execute(self, context):
+        create_flags_layer(context)
+        return{'FINISHED'}    
+
+class ButtonPropertiesSet(bpy.types.Operator):
+    bl_idname = "properties.set_prop"
+    bl_label = "Property"
+    number = bpy.props.IntProperty()
+    row = bpy.props.IntProperty()
+    loc = bpy.props.StringProperty()
+ 
+    def execute(self, context):
+        set_flag(context, flags[self.number], prop_states[self.number])
+        return{'FINISHED'}    
+
+def create_flags_layer(context):
+    obj = context.object
+    bm = bmesh.from_edit_mesh(obj.data)
+    bm.loops.layers.color.new("flags")
+
+def set_flag(context, flag, status=-1):
+    obj = context.object
+    bm = bmesh.from_edit_mesh(obj.data)
+    flag_layer = bm.loops.layers.color.get("flags")
+    print("DEBUG: Toggle flag {}".format(str(flag)))
+    for face in bm.faces:
+        if face.select:
+            for loop in range(len(face.loops)):
+                vc = face.loops[loop][flag_layer]
+                bf = helpers.vc_to_bitfield(vc)
+                if status == 1: # enable flag
+                    bf |= flag
+                elif status == 0: # disable flag
+                    bf = bf & (~flag)
+                else: # toggle
+                    if not bf & flag:
+                        bf |= flag
+                    else:
+                        bf = bf & (~flag)
+
+                face.loops[loop][flag_layer] = helpers.bitfield_to_vc(bf)
 
 # Add to a menu
 def menu_func_export(self, context):
@@ -91,13 +219,20 @@ def menu_func_import(self, context):
 def register():
     bpy.utils.register_module(__name__)
 
+    bpy.utils.register_class(RevoltPropertiesPanel)
+    bpy.utils.register_class(RevoltPropertiesPanel)
+    bpy.utils.register_class(ButtonPropertiesSet)
+
     bpy.types.INFO_MT_file_import.append(menu_func_import)
     bpy.types.INFO_MT_file_export.append(menu_func_export)
 
 
 def unregister():
     bpy.utils.unregister_module(__name__)
+    bpy.utils.unregister_class(RevoltPropertiesPanel)
 
+    bpy.utils.unregister_class(ButtonPropertiesSet)
+    bpy.utils.unregister_class(ButtonPropertiesCreateLayer)
     bpy.types.INFO_MT_file_import.remove(menu_func_import)
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
