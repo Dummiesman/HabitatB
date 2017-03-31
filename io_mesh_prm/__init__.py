@@ -8,12 +8,12 @@
 # ##### END LICENSE BLOCK #####
 
 bl_info = {
-    "name": "Re-Volt PRM Import/Export",
-    "author": "Dummiesman",
+    "name": "HabitiatB - Re-Volt PRM",
+    "author": "Dummiesman, Yethiel",
     "version": (0, 0, 1),
     "blender": (2, 78, 0),
     "location": "File > Import-Export",
-    "description": "Import-Export PRM files",
+    "description": "Import and export Re-Volt PRM files",
     "warning": "",
     "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.7/Py/"
                 "Scripts/Import-Export/DummiesmanPRM",
@@ -34,13 +34,16 @@ from bpy_extras.io_utils import (
         )
 
 class ImportPRM(bpy.types.Operator, ImportHelper):
-    """Import from PRM file format (.prm)"""
+    """Import from PRM file format (.prm, .m)"""
     bl_idname = "import_scene.prm"
     bl_label = 'Import PRM'
     bl_options = {'UNDO'}
 
     filename_ext = ".prm"
-    filter_glob = StringProperty(default="*.prm", options={'HIDDEN'})
+    filter_glob = StringProperty(
+            default="*.prm;*.m", 
+            options={'HIDDEN'},
+            )
 
     def execute(self, context):
         from . import import_prm
@@ -54,13 +57,13 @@ class ImportPRM(bpy.types.Operator, ImportHelper):
 
 
 class ExportPRM(bpy.types.Operator, ExportHelper):
-    """Export to PRM file format (.prm)"""
+    """Export to PRM file format (.prm, .m)"""
     bl_idname = "export_scene.prm"
     bl_label = 'Export PRM'
 
     filename_ext = ".prm"
     filter_glob = StringProperty(
-            default="*.prm",
+            default="*.prm;*.m",
             options={'HIDDEN'},
             )
         
@@ -78,11 +81,11 @@ class ExportPRM(bpy.types.Operator, ExportHelper):
 
 # Add to a menu
 def menu_func_export(self, context):
-    self.layout.operator(ExportPRM.bl_idname, text="Re-Volt PRM (.prm)")
+    self.layout.operator(ExportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
 
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportPRM.bl_idname, text="Re-Volt PRM (.prm)")
+    self.layout.operator(ImportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
 
 
 def register():
