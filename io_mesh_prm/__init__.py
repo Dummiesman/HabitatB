@@ -47,9 +47,8 @@ flag_names = ["Invisible", "Mirroring",
         "Cloth Effect"
         ]
 """
-flag_names = ["Quadratic", "Double-Sided", "Transparent", "Alpha/Additive", "No EnvMap", "EnvMap"]
-
-flags = [0x001, 0x002, 0x004, 0x100, 0x400, 0x800]
+flag_names = ["Double-Sided", "Transparent", "Alpha/Additive", "No EnvMap", "EnvMap"]
+flags = [0x002, 0x004, 0x100, 0x400, 0x800]
 
 class ImportPRM(bpy.types.Operator, ImportHelper):
     """Import from PRM file format (.prm, .m)"""
@@ -101,7 +100,10 @@ class RevoltPropertiesPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "data"
-
+    
+    selected_face_count = None
+    selection = None
+    
     @classmethod
     def poll(cls, context):
         # Only allow in edit mode for a selected mesh.
@@ -110,8 +112,15 @@ class RevoltPropertiesPanel(bpy.types.Panel):
  
     def draw(self, context):
         obj = context.object
-        bm = bmesh.from_edit_mesh(obj.data)
-        selection = bm.select_history #FIXME: Not the actual selection
+        mesh = obj.data
+        bm = bmesh.from_edit_mesh(mesh)
+        
+        # update selection data
+        if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
+          self.selected_face_count = mesh.total_face_sel
+          self.selection = [face for face in bm.faces if face.select]
+        
+        # draw stuff
         flag_layer = bm.loops.layers.color.get("flags")
 
         if flag_layer is None:
@@ -120,9 +129,9 @@ class RevoltPropertiesPanel(bpy.types.Panel):
             row = self.layout.row()
             row.operator("properties.create_layer", icon='PLUS')
 
-        elif selection:
+        elif self.selection:
             # number of selected faces
-            self.layout.row().label(text="{} faces selected.".format(len(selection)))
+            self.layout.row().label(text="{} faces selected.".format(self.selected_face_count))
             row = self.layout.row()
             row.label(text="Toggle Property")
             row.label(text="Status")
@@ -134,7 +143,7 @@ class RevoltPropertiesPanel(bpy.types.Panel):
                 row.operator("properties.set_prop", icon='NONE', text=flag_names[prop]).number=prop
                 # place a status label
                 num_set = 0
-                for face in selection:
+                for face in self.selection:
                     bf = helpers.vc_to_bitfield(face.loops[0][flag_layer])
                     if bf & flags[prop]: # check if the flag is checked
                         num_set += 1
@@ -142,13 +151,13 @@ class RevoltPropertiesPanel(bpy.types.Panel):
                     ico = "X"
                     txt = "Not set"
                     prop_states[prop] = 1 # enable all on button press
-                elif num_set == len(selection): # all are set
+                elif num_set == self.selected_face_count: # all are set
                     ico = "FILE_TICK"
                     txt = "Set"
                     prop_states[prop] = 0 # disable all on button press
                 else: # some are set
                     ico = "DOTSDOWN"
-                    txt = "Set for {} of {}".format(num_set, len(selection))
+                    txt = "Set for {} of {}".format(num_set, self.selected_face_count)
                     prop_states[prop] = 1 # enable all on button press
 
                 row.label(text=txt, icon=ico)
@@ -192,8 +201,8 @@ def set_flag(context, flag, status=-1):
     print("DEBUG: Toggle flag {}".format(str(flag)))
     for face in bm.faces:
         if face.select:
-            for loop in range(len(face.loops)):
-                vc = face.loops[loop][flag_layer]
+            for loop in face.loops:
+                vc = loop[flag_layer]
                 bf = helpers.vc_to_bitfield(vc)
                 if status == 1: # enable flag
                     bf |= flag
@@ -205,7 +214,7 @@ def set_flag(context, flag, status=-1):
                     else:
                         bf = bf & (~flag)
 
-                face.loops[loop][flag_layer] = helpers.bitfield_to_vc(bf)
+                loop[flag_layer] = helpers.bitfield_to_vc(bf)
 
 # Add to a menu
 def menu_func_export(self, context):

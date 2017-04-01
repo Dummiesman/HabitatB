@@ -11,7 +11,7 @@ import time, struct, math
 import os.path as path
 
 import bpy, bmesh, mathutils
-
+from . import helpers
 
 ######################################################
 # EXPORT MAIN FILES
@@ -46,10 +46,7 @@ def save_prm_file(file, ob):
       
       # get the flag layer (bit field)
       if flag_layer:
-        flags_b0 = int(face.loops[0][flag_layer][0] * 255.0)
-        flags_b1 = int(face.loops[0][flag_layer][2] * 255.0)
-        flags_ba = bytearray([flags_b0, flags_b1])
-        flags_int = int.from_bytes(flags_ba, byteorder='little', signed=False)
+        flags_int = helpers.vc_to_bitfield(face.loops[0][flag_layer])
       else:
         flags_int = 0 # if no flag layer is present, don't set any flags
 
