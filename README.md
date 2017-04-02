@@ -6,6 +6,7 @@ A set of Blender tools for Re-Volt. Built for Blender 2.78+
 List of currently supported features:
 + Import and export PRM
 
-[Download](https://github.com/Dummiesman/HabitatB/archive/master.zip)
-
-[Current issues](https://github.com/Dummiesman/HabitatB/issues)
+## Links
++ [Download](https://github.com/Dummiesman/HabitatB/archive/master.zip)
++ [Documentation](https://github.com/Dummiesman/HabitatB/wiki)
++ [Current issues](https://github.com/Dummiesman/HabitatB/issues)
