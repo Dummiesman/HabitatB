@@ -125,8 +125,6 @@ def save(operator,
          filepath="",
 
          ):
-    if not filepath[4:] in [".prm", ".m"]:
-      filepath += ".prm"
     
     # save PRM file
     save_prm(filepath,
