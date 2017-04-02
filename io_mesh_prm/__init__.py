@@ -47,7 +47,7 @@ flag_names = ["Invisible", "Mirroring",
         "Cloth Effect"
         ]
 """
-flag_names = ["Double-Sided", "Transparent", "Alpha/Additive", "No EnvMap", "EnvMap"]
+flag_names = ["Double-Sided", "Transparent", "Alpha or Additive", "No EnvMap", "EnvMap"]
 flags = [0x002, 0x004, 0x100, 0x400, 0x800]
 
 class ImportPRM(bpy.types.Operator, ImportHelper):

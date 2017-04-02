@@ -76,7 +76,7 @@ def save_prm_file(file, ob):
           # get color from the channel or fall back to a default value
           color = face.loops[i][vc_layer] if vc_layer else mathutils.Color((1, 1, 1))
           alpha = face.loops[i][va_layer] if va_layer else mathutils.Color((1, 1, 1))
-          file.write(struct.pack("<BBBB", int(color.b * 255), int(color.g * 255), int(color.r * 255), int((1.0 - alpha.v) * 255)))
+          file.write(struct.pack("<BBBB", int(color.b * 255), int(color.g * 255), int(color.r * 255), int((alpha.v) * 255)))
         else:
           file.write(struct.pack("<BBBB", 1, 1, 1, 1)) # write opaque white as default
 
