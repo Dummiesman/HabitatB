@@ -45,7 +45,7 @@ RV_CAR, RV_OBJECT, RV_INSTANCE, RV_WORLD = range(4)
 type_names = ["Car", "Game Object", "Mesh Instance", "World Mesh"]
 type_icons = ["AUTO", "EMPTY_DATA", "OBJECT_DATA", "WORLD"]
 
-# enum_types = (('0', 'Car', ''), ('1', 'Game Object', ''), ('2', 'Mesh Instance', ''), ('3', 'World Mesh', ''))
+enum_types = (('0', 'Car', ''), ('1', 'Game Object', ''), ('2', 'Mesh Instance', ''), ('3', 'World Mesh', ''))
 
 prop_states = [0, 0, 0, 0, 0, 0]
 
