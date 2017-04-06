@@ -127,6 +127,9 @@ def load_prm_file(file):
     bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
     bm.to_mesh(me)
     bm.free()
+
+    # set new object type to mesh
+    ob.revolt.rv_type = "MESH"
     
 
       
