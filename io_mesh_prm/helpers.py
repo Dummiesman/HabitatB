@@ -8,6 +8,7 @@
 # ##### END LICENSE BLOCK #####
 
 import mathutils
+import struct
 
 def vc_to_bitfield(color_layer):
     flags_b0 = int(color_layer[0] * 255.0)
@@ -22,3 +23,9 @@ def bitfield_to_vc(number):
     flagB = float(flags_bytes[1]) / 255.0
     return mathutils.Color((flagR, 1.0, flagB))
 
+def get_flag_long(self, start):
+    return struct.unpack("=l", bytes(self.flags[start:start + 4]))[0]
+
+def set_flag_long(self, value, start):
+    for i,b in enumerate(struct.pack("=l", value), start):
+        self.flags[i] = b

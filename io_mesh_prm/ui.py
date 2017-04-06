@@ -9,6 +9,7 @@
 
 import bpy
 import bmesh
+import mathutils
 from . import helpers
 
 from bpy.props import (
@@ -38,14 +39,8 @@ flag_names = ["Invisible", "Mirroring",
 """
 
 
-flags = [0x002, 0x004, 0x100, 0x400, 0x800]
+flags = [0x002, 0x004, 0x100, 0x200, 0x400, 0x800]
 
-# type constants and names
-RV_CAR, RV_OBJECT, RV_INSTANCE, RV_WORLD = range(4)
-type_names = ["Car", "Game Object", "Mesh Instance", "World Mesh"]
-type_icons = ["AUTO", "EMPTY_DATA", "OBJECT_DATA", "WORLD"]
-
-enum_types = (('0', 'Car', ''), ('1', 'Game Object', ''), ('2', 'Mesh Instance', ''), ('3', 'World Mesh', ''))
 
 prop_states = [0, 0, 0, 0, 0, 0]
 
@@ -54,73 +49,51 @@ class UIProperties(bpy.types.PropertyGroup):
         items = enum_types, update = lambda self, context: set_rv_type(self, context, 'rv_type')
     )
 
-
-
-# type selection buttons for use in various panels
-def type_selection(row, context):
-    row.alignment = 'EXPAND'
-    # row.prop(context.object, 'rv_type', expand=True)
-    row.operator("obproperties.set", text="Car", icon=type_icons[RV_CAR]).number=RV_CAR
-    row.operator("obproperties.set", text="Object", icon=type_icons[RV_OBJECT]).number=RV_OBJECT
-    row.operator("obproperties.set", text="Instance", icon=type_icons[RV_INSTANCE]).number=RV_INSTANCE
-    row.operator("obproperties.set", text="World", icon=type_icons[RV_WORLD]).number=RV_WORLD
-
 # main panel for selecting the object type
 class RevoltTypePanel(bpy.types.Panel):
-    bl_label = "Re-Volt Object Type"
+    bl_label = "Re-Volt Object Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
-    bl_context = "data"
-
+    bl_context = "object"
+    
     def draw(self, context):
-        obj = context.object
-        scene = context.scene
-        row = self.layout.row()
-
-        # check if the object has an rv type
-        if "rv_type" in obj: 
-            row.label(text="Type: {}".format(type_names[obj["rv_type"]]), icon=type_icons[obj["rv_type"]])
-        else:
-            row.label(text="Please set the type of this object.", icon='INFO')
-
-        # Type selection
-        row = self.layout.row(align=True)
-        # row.prop(scene.ui_properties, "rv_type", text = "Type", expand=True)
-        type_selection(row, context)
+        self.layout.prop(context.object.revolt, "rv_type")
+        
+        if context.object.revolt.rv_type == "OBJECT":
+            self.layout.prop(context.object.revolt, "object_type", text="Object Type")
+            self.layout.prop(context.object.revolt, "flag1_long", text="Setting 1")
+            self.layout.prop(context.object.revolt, "flag2_long", text="Setting 2")
+            self.layout.prop(context.object.revolt, "flag3_long", text="Setting 3")
+            self.layout.prop(context.object.revolt, "flag4_long", text="Setting 4")
 
 # panel for setting per-polygon mesh properties
-class RevoltPropertiesPanel(bpy.types.Panel):
-    bl_label = "Re-Volt Properties"
+class RevotlFacePropertyPanel(bpy.types.Panel):
+    bl_label = "Re-Volt Face Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "data"
     
     selected_face_count = None
     selection = None
-    
-    # @classmethod
-    # def poll(cls, context):
-    #     # Only allow in edit mode for a selected mesh.
-    #     # it might be better to show this panel all the time and just show a warning when not in edit mode
-    #     return context.mode == "EDIT_MESH" and context.object is not None and context.object.type == "MESH"
  
     def draw(self, context):
         obj = context.object
         row = self.layout.row(align=True)
+        row.label(text="Object Type: {}".format(context.object.revolt.rv_type))
 
         # check if the object has an rv type
-        if not "rv_type" in obj:
+        if not context.object.revolt.rv_type in ["MESH", "WORLD"]: # later also for NCP
             row = self.layout.row(align=True)
-            row.label(text="Please set the type of this object.", icon='INFO')
+            row.label(text="This panel is only intended to be used with Mesh or World objects.", icon='INFO')
 
             # Type selection
             row = self.layout.row(align=True)
 
-        if context.mode != "EDIT_MESH":
+        elif context.mode != "EDIT_MESH":
             row = self.layout.row()
             row.label(text="Please enable Edit Mode to set properties.", icon='INFO')
 
-        elif "rv_type" in obj: # EDIT MODE
+        elif context.object.revolt.rv_type in ["MESH", "WORLD"]: # EDIT MODE
             # draw stuff
             mesh = obj.data
             bm = bmesh.from_edit_mesh(mesh)
@@ -147,12 +120,13 @@ class RevoltPropertiesPanel(bpy.types.Panel):
                 for prop in range(len(flag_names)):
 
                     # filter unapplicable flags
-                    if not ((obj["rv_type"] in [RV_CAR, RV_INSTANCE, RV_OBJECT] and prop == 4) or (obj["rv_type"] == RV_WORLD and prop == 3)):
+                    if not ((context.object.revolt.rv_type in ["MESH"] and prop == 4) or (context.object.revolt.rv_type == "WORLD" and prop == 3)):
 
                         # create a new row
                         row = self.layout.row()
                         # place a button
                         row.operator("properties.set_prop", icon='NONE', text=flag_names[prop]).number=prop
+                        
                         # place a status label
                         num_set = 0
                         for face in self.selection:
@@ -179,7 +153,7 @@ class RevoltPropertiesPanel(bpy.types.Panel):
 
 # panel for setting vertex colors
 class RevoltVertexPanel(bpy.types.Panel):
-    bl_label = "HabitatB Vertex Colors (not implemented)"
+    bl_label = "HabitatB Vertex Colors"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "data"
@@ -212,7 +186,7 @@ class RevoltVertexPanel(bpy.types.Panel):
             elif self.selection:
                 row = self.layout.row()
                 row.operator("vertexcolor.set", text="Grey 50%").number=50
-                row.operator("vertexcolor.set", text="Not implemented.")
+                row.operator("vertexcolor.set", text="Not a button.")
                 row = self.layout.row()
                 col = row.column(align=True)
                 col.alignment = 'EXPAND'
@@ -233,6 +207,7 @@ class RevoltVertexPanel(bpy.types.Panel):
                 col.operator("vertexcolor.set", text="Grey 90%").number=90
                 col.operator("vertexcolor.set", text="White").number=100
 
+# BUTTONS
 
 class ButtonPropertiesCreateLayer(bpy.types.Operator):
     bl_idname = "properties.create_layer"
@@ -272,8 +247,8 @@ class ButtonVertexColorCreateLayer(bpy.types.Operator):
 class ButtonPropertiesSet(bpy.types.Operator):
     bl_idname = "properties.set_prop"
     bl_label = "Property"
-    bl_description = "Toggle this property"
     number = bpy.props.IntProperty()
+    bl_description = "Set this flag"
 
     def draw(self, context):
         self.bl_description = flag_descr[self.number]
@@ -282,8 +257,19 @@ class ButtonPropertiesSet(bpy.types.Operator):
         set_flag(context, flags[self.number], prop_states[self.number])
         return{'FINISHED'}    
 
+# BUTTON FUNCTIONS
+
 def set_vertex_color(context, number):
     print(context, number)
+    bm = bmesh.from_edit_mesh(context.object.data)        
+    verts = [ v for v in bm.verts if v.select ]
+    if verts:
+        colors = bm.loops.layers.color.get("color")   
+        for v in verts:
+            for loop in v.link_loops:
+                loop[colors] = mathutils.Color((number/100, number/100, number/100))
+                
+        bmesh.update_edit_mesh(context.object.data)
 
 def set_rv_type(context, type):
     obj = context.object

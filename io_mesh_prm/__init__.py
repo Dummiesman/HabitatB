@@ -29,9 +29,11 @@ from bpy.props import (
         BoolProperty,
         EnumProperty,
         FloatProperty,
+        IntProperty,
         StringProperty,
         CollectionProperty,
-        IntVectorProperty
+        IntVectorProperty,
+        PointerProperty
         )
 from bpy_extras.io_utils import (
         ImportHelper,
@@ -46,6 +48,65 @@ for var in locals_copy:
     if isinstance(tmp, types.ModuleType) and tmp.__package__ == "io_mesh_prm":
       print ("Reloading: %s"%(var))
       imp.reload(tmp)
+
+object_types = [
+    ("OBJECT_TYPE_CAR", "Car", "Car", "", -1),
+    ("OBJECT_TYPE_BARREL", "Barrel", "Barrel", "", 1),
+    ("OBJECT_TYPE_BEACHBALL", "Beachball", "Beachball", "", 2),
+    ("OBJECT_TYPE_PLANET", "Planet", "Planet", "", 3),
+    ("OBJECT_TYPE_PLANE", "Plane", "Plane", "", 4),
+    ("OBJECT_TYPE_COPTER", "Copter", "Copter", "", 5),
+    ("OBJECT_TYPE_DRAGON", "Dragon", "Dragon", "", 6),
+    ("OBJECT_TYPE_WATER", "Water", "Water", "", 7),
+    ("OBJECT_TYPE_TROLLEY", "Trolley", "Trolley", "", 8),
+    ("OBJECT_TYPE_BOAT", "Boat", "Boat", "", 9),
+    ("OBJECT_TYPE_SPEEDUP", "Speedup", "Speedup", "", 10),
+    ("OBJECT_TYPE_RADAR", "Radar", "Radar", "", 11),
+    ("OBJECT_TYPE_BALLOON", "Balloon", "Balloon", "", 12),
+    ("OBJECT_TYPE_HORSE", "Horse", "Horse", "", 13),
+    ("OBJECT_TYPE_TRAIN", "Train", "Train", "", 14),
+    ("OBJECT_TYPE_STROBE", "Strobe", "Strobe", "", 15),
+    ("OBJECT_TYPE_FOOTBALL", "Football", "Football", "", 16),
+    ("OBJECT_TYPE_SPARKGEN", "Sparkgen", "Sparkgen", "", 17),
+    ("OBJECT_TYPE_SPACEMAN", "Spaceman", "Spaceman", "", 18),
+    ("OBJECT_TYPE_SHOCKWAVE", "Shockwave", "Shockwave", "", 19),
+    ("OBJECT_TYPE_FIREWORK", "Firework", "Firework", "", 20),
+    ("OBJECT_TYPE_PUTTYBOMB", "Puttybomb", "Puttybomb", "", 21),
+    ("OBJECT_TYPE_WATERBOMB", "Waterbomb", "Waterbomb", "", 22),
+    ("OBJECT_TYPE_ELECTROPULSE", "Electropulse", "Electropulse", "", 23),
+    ("OBJECT_TYPE_OILSLICK", "Oilslick", "Oilslick", "", 24),
+    ("OBJECT_TYPE_OILSLICK_DROPPER", "Oilslick dropper", "Oilslick dropper", "", 25),
+    ("OBJECT_TYPE_CHROMEBALL", "Chromeball", "Chromeball", "", 26),
+    ("OBJECT_TYPE_CLONE", "Clone", "Clone", "", 27),
+    ("OBJECT_TYPE_TURBO", "Turbo", "Turbo", "", 28),
+    ("OBJECT_TYPE_ELECTROZAPPED", "Electrozapped", "Electrozapped", "", 29),
+    ("OBJECT_TYPE_SPRING", "Spring", "Spring", "", 30),
+    ("OBJECT_TYPE_PICKUP", "Pickup", "Pickup", "", 31),
+    ("OBJECT_TYPE_DISSOLVEMODEL", "Dissolve model", "Dissolve model", "", 32),
+    ("OBJECT_TYPE_FLAP", "Flap", "Flap", "", 33),
+    ("OBJECT_TYPE_LASER", "Laser", "Laser", "", 34),
+    ("OBJECT_TYPE_SPLASH", "Splash", "Splash", "", 35),
+    ("OBJECT_TYPE_BOMBGLOW", "Bombglow", "Bombglow", "", 36),
+    ("OBJECT_TYPE_MAX", "Max", "Max", "", 37),
+    ]
+
+# Object types and properties
+# The flags are for the .fob file and the .fin file (game objects and mesh instances)
+class RevoltObjectProperties(bpy.types.PropertyGroup):
+    rv_type = EnumProperty(name = "Type", items = (("NONE", "None", "None"), 
+                                                ("MESH", "Mesh", "Mesh"), 
+                                                ("OBJECT", "Object", "Object"), 
+                                                ("INSTANCE", "Instance", "Instance"), 
+                                                ("WORLD", "World", "World"),
+                                                ("NCP", "Collision (NCP)", "Collision (NCP)"),
+                                                ("HULL", "Hull", "Hull"),
+                                                ))
+    object_type = EnumProperty(name = "Object type", items = object_types)
+    flags = IntVectorProperty(name = "Flags", size = 16)
+    flag1_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 0), set = lambda s,v: helpers.set_flag_long(s, v, 0))
+    flag2_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 4), set = lambda s,v: helpers.set_flag_long(s, v, 4))
+    flag3_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 8), set = lambda s,v: helpers.set_flag_long(s, v, 8))
+    flag4_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 12), set = lambda s,v: helpers.set_flag_long(s, v, 12))
 
 class ImportPRM(bpy.types.Operator, ImportHelper):
     """Import from PRM file format (.prm, .m)"""
@@ -109,6 +170,8 @@ def register():
 
     bpy.types.Scene.ui_properties = bpy.props.PointerProperty(type=ui.UIProperties)
 
+    bpy.types.Object.revolt = PointerProperty(type = RevoltObjectProperties)
+
 
 def unregister():
     bpy.utils.unregister_module(__name__)
@@ -117,6 +180,10 @@ def unregister():
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
     del bpy.types.Scene.ui_properties
+
+    del bpy.types.Object.revolt
+
+
 
 if __name__ == "__main__":
     register()
