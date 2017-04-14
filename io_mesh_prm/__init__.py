@@ -94,12 +94,12 @@ object_types = [
 # The flags are for the .fob file and the .fin file (game objects and mesh instances)
 class RevoltObjectProperties(bpy.types.PropertyGroup):
     rv_type = EnumProperty(name = "Type", items = (("NONE", "None", "None"), 
-                                                ("MESH", "Mesh", "Mesh"), 
-                                                ("OBJECT", "Object", "Object"), 
-                                                ("INSTANCE", "Instance", "Instance"), 
-                                                ("WORLD", "World", "World"),
-                                                ("NCP", "Collision (NCP)", "Collision (NCP)"),
-                                                ("HULL", "Hull", "Hull"),
+                                                ("MESH", "Mesh (.prm)", "Mesh"), 
+                                                ("OBJECT", "Object (.fob)", "Object"), 
+                                                ("INSTANCE", "Instance (.fin)", "Instance"), 
+                                                ("WORLD", "World (.w)", "World"),
+                                                ("NCP", "Collision (.ncp)", "Collision (NCP)"),
+                                                ("HULL", "Hull (.hul)", "Hull"),
                                                 ))
     object_type = EnumProperty(name = "Object type", items = object_types)
     flags = IntVectorProperty(name = "Flags", size = 16)

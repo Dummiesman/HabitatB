@@ -46,7 +46,7 @@ prop_states = [0, 0, 0, 0, 0, 0]
 
 class UIProperties(bpy.types.PropertyGroup):
     rv_type = bpy.props.EnumProperty(
-        items = enum_types, update = lambda self, context: set_rv_type(self, context, 'rv_type')
+        items = None, update = lambda self, context: set_rv_type(self, context, 'rv_type')
     )
 
 # main panel for selecting the object type
