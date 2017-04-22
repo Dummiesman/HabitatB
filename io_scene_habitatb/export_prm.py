@@ -1,11 +1,12 @@
 # ##### BEGIN LICENSE BLOCK #####
 #
-# This program is licensed under Creative Commons BY-NC-SA:
+# This program is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 3.0
 # https://creativecommons.org/licenses/by-nc-sa/3.0/
 #
 # Copyright (C) Dummiesman, Yethiel 2017
 #
 # ##### END LICENSE BLOCK #####
+
 
 import time, struct, math
 import os.path as path

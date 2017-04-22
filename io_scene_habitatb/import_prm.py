@@ -1,13 +1,14 @@
 # ##### BEGIN LICENSE BLOCK #####
 #
-# This program is licensed under Creative Commons BY-NC-SA:
+# This program is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 3.0
 # https://creativecommons.org/licenses/by-nc-sa/3.0/
 #
 # Copyright (C) Dummiesman, Yethiel 2017
 #
 # ##### END LICENSE BLOCK #####
 
-import bpy, bmesh, mathutils
+
+import bpy, struct, bmesh, mathutils, re, os, glob
 import time, struct
 
 export_filename = None

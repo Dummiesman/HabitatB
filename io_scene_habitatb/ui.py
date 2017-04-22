@@ -1,11 +1,12 @@
 # ##### BEGIN LICENSE BLOCK #####
 #
-# This program is licensed under Creative Commons BY-NC-SA:
+# This program is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 3.0
 # https://creativecommons.org/licenses/by-nc-sa/3.0/
 #
 # Copyright (C) Dummiesman, Yethiel 2017
 #
 # ##### END LICENSE BLOCK #####
+
 
 import bpy
 import bmesh
@@ -44,10 +45,10 @@ flags = [0x002, 0x004, 0x100, 0x200, 0x400, 0x800]
 
 prop_states = [0, 0, 0, 0, 0, 0]
 
-class UIProperties(bpy.types.PropertyGroup):
-    rv_type = bpy.props.EnumProperty(
-        items = None, update = lambda self, context: set_rv_type(self, context, 'rv_type')
-    )
+# class UIProperties(bpy.types.PropertyGroup):
+#     rv_type = bpy.props.EnumProperty(
+#         items = None, update = lambda self, context: set_rv_type(self, context, 'rv_type')
+#     )
 
 # main panel for selecting the object type
 class RevoltTypePanel(bpy.types.Panel):
@@ -67,7 +68,7 @@ class RevoltTypePanel(bpy.types.Panel):
             self.layout.prop(context.object.revolt, "flag4_long", text="Setting 4")
 
 # panel for setting per-polygon mesh properties
-class RevotlFacePropertyPanel(bpy.types.Panel):
+class RevoltFacePropertyPanel(bpy.types.Panel):
     bl_label = "Re-Volt Face Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -113,6 +114,7 @@ class RevotlFacePropertyPanel(bpy.types.Panel):
             elif self.selection:
                 # number of selected faces
                 self.layout.row().label(text="{} faces selected.".format(self.selected_face_count))
+                self.layout.prop(context.object.revolt, "texture", text="Texture Number")
                 row = self.layout.row()
                 row.label(text="Toggle Property")
                 row.label(text="Status")

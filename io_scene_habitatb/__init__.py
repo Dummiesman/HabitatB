@@ -9,12 +9,12 @@
 
 
 bl_info = {
-    "name": "HabitiatB - Re-Volt PRM",
+    "name": "HabitiatB - Re-Volt File Formats",
     "author": "Dummiesman, Yethiel",
     "version": (0, 0, 1),
     "blender": (2, 78, 0),
     "location": "File > Import-Export",
-    "description": "Import and export Re-Volt PRM files",
+    "description": "Import and export Re-Volt files",
     "warning": "",
     "wiki_url": "https://github.com/Dummiesman/HabitatB/wiki",
     "support": 'COMMUNITY',
@@ -39,7 +39,9 @@ from bpy_extras.io_utils import (
         ImportHelper,
         ExportHelper,
         )
-from . import helpers, ui
+from . import helpers, ui, parameters
+
+from bpy_extras.io_utils import ImportHelper, ExportHelper, axis_conversion
 
 # Completely reload the addon when hitting F8:
 locals_copy = dict(locals())
@@ -107,6 +109,7 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
     flag2_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 4), set = lambda s,v: helpers.set_flag_long(s, v, 4))
     flag3_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 8), set = lambda s,v: helpers.set_flag_long(s, v, 8))
     flag4_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 12), set = lambda s,v: helpers.set_flag_long(s, v, 12))
+    texture = IntProperty(name = "Texture")
 
 class ImportPRM(bpy.types.Operator, ImportHelper):
     """Import from PRM file format (.prm, .m)"""
@@ -129,6 +132,35 @@ class ImportPRM(bpy.types.Operator, ImportHelper):
                                             ))
 
         return import_prm.load(self, context, **keywords)
+
+class ImportNCP(bpy.types.Operator, ImportHelper):
+    """Import from NCP file format (.ncp)"""
+    bl_idname = "import_scene.ncp"
+    bl_label = 'Import NCP'
+    bl_options = {'UNDO'}
+
+    filename_ext = ".ncp"
+    filter_glob = StringProperty(
+            default="*.ncp", 
+            options={'HIDDEN'},
+            )
+
+    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
+    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    
+    def execute(self, context):
+        from . import import_ncp
+        keywords = self.as_keywords(ignore=("axis_forward",
+                                            "up_axis",
+                                            "scale",
+                                            "forward_axis",
+                                            "filter_glob",
+                                            "check_existing",
+
+                                            ))
+
+        return import_ncp.load(self, context, axis_conversion(to_up = self.up_axis, to_forward = self.forward_axis).to_4x4() * self.scale, self.properties.filepath)
 
 
 class ExportPRM(bpy.types.Operator, ExportHelper):
@@ -153,22 +185,60 @@ class ExportPRM(bpy.types.Operator, ExportHelper):
                                     
         return export_prm.save(self, context, **keywords)
 
+class ExportNCP(bpy.types.Operator, ExportHelper):
+    """Export to PRM file format (.prm, .m)"""
+    bl_idname = "export_scene.ncp"
+    bl_label = 'Export NCP'
+
+    filename_ext = ""
+    filter_glob = StringProperty(
+            default="*.ncp;*.m",
+            options={'HIDDEN'},
+            )
+
+
+    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
+    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+   
+        
+    def execute(self, context):
+        from . import export_ncp
+        
+        keywords = self.as_keywords(ignore=("axis_forward",
+                                            "axis_up",
+                                            "filter_glob",
+                                            "check_existing",
+                                            ))
+                                    
+        return export_ncp.save(self, context, axis_conversion(from_up = self.up_axis, from_forward = self.forward_axis).to_4x4() * (1 / self.scale), self.properties.filepath)
+
+
 # Add to a menu
 def menu_func_export(self, context):
     self.layout.operator(ExportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
 
-
 def menu_func_import(self, context):
     self.layout.operator(ImportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
+
+
+def menu_func_import_ncp(self, context):
+    self.layout.operator(ImportNCP.bl_idname, text="Re-Volt NCP (.ncp)")
+
+def menu_func_export_ncp(self, context):
+    self.layout.operator(ExportNCP.bl_idname, text="Re-Volt NCP (.ncp)")
+
 
 
 def register():
     bpy.utils.register_module(__name__)
 
     bpy.types.INFO_MT_file_import.append(menu_func_import)
+    bpy.types.INFO_MT_file_import.append(menu_func_import_ncp)
     bpy.types.INFO_MT_file_export.append(menu_func_export)
+    bpy.types.INFO_MT_file_export.append(menu_func_export_ncp)
 
-    bpy.types.Scene.ui_properties = bpy.props.PointerProperty(type=ui.UIProperties)
+    #bpy.types.Scene.ui_properties = bpy.props.PointerProperty(type=ui.UIProperties)
 
     bpy.types.Object.revolt = PointerProperty(type = RevoltObjectProperties)
 
@@ -177,9 +247,11 @@ def unregister():
     bpy.utils.unregister_module(__name__)
 
     bpy.types.INFO_MT_file_import.remove(menu_func_import)
+    bpy.types.INFO_MT_file_import.remove(menu_func_import_ncp)
+    bpy.types.INFO_MT_file_export.remove(menu_func_export_ncp)
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
-    del bpy.types.Scene.ui_properties
+    # del bpy.types.Scene.ui_properties
 
     del bpy.types.Object.revolt
 
