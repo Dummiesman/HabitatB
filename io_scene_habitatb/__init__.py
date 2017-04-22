@@ -147,6 +147,28 @@ class ImportPRM(bpy.types.Operator, ImportHelper):
 
         return import_prm.load(self, context, **keywords)
 
+class ImportW(bpy.types.Operator, ImportHelper):
+    """Import from W file format (.w)"""
+    bl_idname = "import_scene.w"
+    bl_label = 'Import W'
+    bl_options = {'UNDO'}
+
+    filename_ext = ".prm"
+    filter_glob = StringProperty(
+            default="*.w", 
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        from . import import_w
+        keywords = self.as_keywords(ignore=("axis_forward",
+                                            "axis_up",
+                                            "filter_glob",
+                                            "check_existing",
+                                            ))
+
+        return import_w.load(self, context, **keywords)
+
 class ImportNCP(bpy.types.Operator, ImportHelper):
     """Import from NCP file format (.ncp)"""
     bl_idname = "import_scene.ncp"
@@ -242,6 +264,8 @@ def menu_func_import_ncp(self, context):
 def menu_func_export_ncp(self, context):
     self.layout.operator(ExportNCP.bl_idname, text="Re-Volt NCP (.ncp)")
 
+def menu_func_import_w(self, context):
+    self.layout.operator(ImportW.bl_idname, text="Re-Volt W (.w)")
 
 
 def register():
@@ -249,6 +273,7 @@ def register():
 
     bpy.types.INFO_MT_file_import.append(menu_func_import)
     bpy.types.INFO_MT_file_import.append(menu_func_import_ncp)
+    bpy.types.INFO_MT_file_import.append(menu_func_import_w)
     bpy.types.INFO_MT_file_export.append(menu_func_export)
     bpy.types.INFO_MT_file_export.append(menu_func_export_ncp)
 
@@ -264,6 +289,7 @@ def unregister():
 
     bpy.types.INFO_MT_file_import.remove(menu_func_import)
     bpy.types.INFO_MT_file_import.remove(menu_func_import_ncp)
+    bpy.types.INFO_MT_file_import.remove(menu_func_import_w)
     bpy.types.INFO_MT_file_export.remove(menu_func_export_ncp)
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
