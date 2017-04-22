@@ -34,7 +34,8 @@ def load_prm_file(file):
     uv_layer = bm.loops.layers.uv.new("uv")    
     vc_layer = bm.loops.layers.color.new("color")
     va_layer = bm.loops.layers.color.new("alpha")
-    flag_layer = bm.loops.layers.color.new("flags")
+    flag_layer = bm.faces.layers.int.new("revolt_face_type")
+    texture_layer = bm.faces.layers.int.new("texture")
     
     scn.objects.link(ob)
     scn.objects.active = ob
@@ -106,14 +107,17 @@ def load_prm_file(file):
           face.loops[loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
           
           # setup flag layer
-          flags_bytes = flags.to_bytes(2, byteorder='little', signed=False)
-          flagR = float(flags_bytes[0]) / 255.0
-          flagB = float(flags_bytes[1]) / 255.0
-          face.loops[loop][flag_layer] = mathutils.Color((flagR, 1.0, flagB))
+          # flags_bytes = flags.to_bytes(2, byteorder='little', signed=False)
+          # flagR = float(flags_bytes[0]) / 255.0
+          # flagB = float(flags_bytes[1]) / 255.0
+          # face.loops[loop][flag_layer] = mathutils.Color((flagR, 1.0, flagB))
           
         # setup face
+        face[flag_layer] = flags
+        face[texture_layer] = texture
         face.smooth = True
         face.normal_flip()
+
       except ValueError as e:
         print(e)
         # set existing face as double-sided

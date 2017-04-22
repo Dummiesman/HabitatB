@@ -68,97 +68,138 @@ class RevoltTypePanel(bpy.types.Panel):
             self.layout.prop(context.object.revolt, "flag4_long", text="Setting 4")
 
 # panel for setting per-polygon mesh properties
-class RevoltFacePropertyPanel(bpy.types.Panel):
-    bl_label = "Re-Volt Face Properties"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "data"
+# class RevoltFacePropertyPanel(bpy.types.Panel):
+#     bl_label = "Re-Volt Face Properties"
+#     bl_space_type = "PROPERTIES"
+#     bl_region_type = "WINDOW"
+#     bl_context = "data"
     
-    selected_face_count = None
-    selection = None
+#     selected_face_co  unt = None
+#     selection = None
  
+#     def draw(self, context):
+#         obj = context.object
+#         row = self.layout.row(align=True)
+#         row.label(text="Object Type: {}".format(context.object.revolt.rv_type))
+#         # check if the object has an rv type
+#         if not context.object.revolt.rv_type in ["MESH", "WORLD", "NCP"]: # later also for NCP
+#             row = self.layout.row(align=True)
+#             row.label(text="This panel is only intended to be used with the following Re-Volt types: Mesh, World, NCP.", icon='INFO')
+
+#             # Type selection
+#             row = self.layout.row(align=True)
+
+#         elif context.mode != "EDIT_MESH":
+#             row = self.layout.row()
+#             row.label(text="Please enable Edit Mode to set properties.", icon='INFO')
+
+#         elif context.object.revolt.rv_type in ["MESH", "WORLD"]: # EDIT MODE
+#             # draw stuff
+#             mesh = obj.data
+#             bm = bmesh.from_edit_mesh(mesh)
+#             flag_layer = bm.loops.layers.color.get("flags")
+           
+#             # update selection data
+#             if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
+#                 self.selected_face_count = mesh.total_face_sel
+#                 self.selection = [face for face in bm.faces if face.select]
+        
+#             if flag_layer is None:
+#                 row = self.layout.row()
+#                 row.label(text="Please create a properties (flags) layer.", icon='INFO')
+#                 row = self.layout.row()
+#                 row.operator("properties.create_layer", icon='PLUS')
+
+#             elif self.selection:
+#                 # number of selected faces
+#                 self.layout.row().label(text="{} faces selected.".format(self.selected_face_count))
+#                 self.layout.prop(context.object.revolt, "texture", text="Texture Number")
+#                 row = self.layout.row()
+#                 row.label(text="Toggle Property")
+#                 row.label(text="Status")
+#                 # list of properties and buttons, create a button for each
+#                 for prop in range(len(flag_names)):
+
+#                     # filter unapplicable flags
+#                     if not ((context.object.revolt.rv_type in ["MESH"] and prop == 4) or (context.object.revolt.rv_type == "WORLD" and prop == 3)):
+
+#                         # create a new row
+#                         row = self.layout.row()
+#                         # place a button
+#                         row.operator("properties.set_prop", icon='NONE', text=flag_names[prop]).number=prop
+                        
+#                         # place a status label
+#                         num_set = 0
+#                         for face in self.selection:
+#                             bf = helpers.vc_to_bitfield(face.loops[0][flag_layer])
+#                             if bf & flags[prop]: # check if the flag is checked
+#                                 num_set += 1
+#                         if num_set == 0: # none are set
+#                             ico = "X"
+#                             txt = "Not set"
+#                             prop_states[prop] = 1 # enable all on button press
+#                         elif num_set == self.selected_face_count: # all are set
+#                             ico = "FILE_TICK"
+#                             txt = "Set"
+#                             prop_states[prop] = 0 # disable all on button press
+#                         else: # some are set
+#                             ico = "DOTSDOWN"
+#                             txt = "Set for {} of {}".format(num_set, self.selected_face_count)
+#                             prop_states[prop] = 1 # enable all on button press
+
+#                         row.label(text=txt, icon=ico)
+#             else:
+#                 self.layout.row().label(text="Select at least one face.", icon='INFO')
+
+#         elif context.object.revolt.rv_type == "NCP":
+#                 self.layout.prop(context.object.data.revolt, "face_material")
+
+
+class RevoltFacePropertiesPanel(bpy.types.Panel):
+    bl_label = "Revolt Face Properties"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
+    bl_context = "mesh_edit"
+    bl_category = "Re-Volt"
+    
+    selection = None
+    selected_face_count = None
+
+    # @classmethod
+    # def poll(self, context):
+    #     return context.object.type == "MESH"
+    
     def draw(self, context):
         obj = context.object
-        row = self.layout.row(align=True)
-        row.label(text="Object Type: {}".format(context.object.revolt.rv_type))
+        mesh = obj.data
+        bm = bmesh.from_edit_mesh(mesh)
+        if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
+            self.selected_face_count = mesh.total_face_sel
+            self.selection = [face for face in bm.faces if face.select]
 
-        # check if the object has an rv type
-        if not context.object.revolt.rv_type in ["MESH", "WORLD"]: # later also for NCP
-            row = self.layout.row(align=True)
-            row.label(text="This panel is only intended to be used with Mesh or World objects.", icon='INFO')
+        if len(self.selection) > 1:
+            str_supp = "(Multiple) "
+            # str_supp = "{}/{}: ".format("X", len(self.selection))
+        else:
+            str_supp = ""
 
-            # Type selection
-            row = self.layout.row(align=True)
-
-        elif context.mode != "EDIT_MESH":
-            row = self.layout.row()
-            row.label(text="Please enable Edit Mode to set properties.", icon='INFO')
-
-        elif context.object.revolt.rv_type in ["MESH", "WORLD"]: # EDIT MODE
-            # draw stuff
-            mesh = obj.data
-            bm = bmesh.from_edit_mesh(mesh)
-            flag_layer = bm.loops.layers.color.get("flags")
-           
-            # update selection data
-            if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
-                self.selected_face_count = mesh.total_face_sel
-                self.selection = [face for face in bm.faces if face.select]
-        
-            if flag_layer is None:
-                row = self.layout.row()
-                row.label(text="Please create a properties (flags) layer.", icon='INFO')
-                row = self.layout.row()
-                row.operator("properties.create_layer", icon='PLUS')
-
-            elif self.selection:
-                # number of selected faces
-                self.layout.row().label(text="{} faces selected.".format(self.selected_face_count))
-                self.layout.prop(context.object.revolt, "texture", text="Texture Number")
-                row = self.layout.row()
-                row.label(text="Toggle Property")
-                row.label(text="Status")
-                # list of properties and buttons, create a button for each
-                for prop in range(len(flag_names)):
-
-                    # filter unapplicable flags
-                    if not ((context.object.revolt.rv_type in ["MESH"] and prop == 4) or (context.object.revolt.rv_type == "WORLD" and prop == 3)):
-
-                        # create a new row
-                        row = self.layout.row()
-                        # place a button
-                        row.operator("properties.set_prop", icon='NONE', text=flag_names[prop]).number=prop
-                        
-                        # place a status label
-                        num_set = 0
-                        for face in self.selection:
-                            bf = helpers.vc_to_bitfield(face.loops[0][flag_layer])
-                            if bf & flags[prop]: # check if the flag is checked
-                                num_set += 1
-                        if num_set == 0: # none are set
-                            ico = "X"
-                            txt = "Not set"
-                            prop_states[prop] = 1 # enable all on button press
-                        elif num_set == self.selected_face_count: # all are set
-                            ico = "FILE_TICK"
-                            txt = "Set"
-                            prop_states[prop] = 0 # disable all on button press
-                        else: # some are set
-                            ico = "DOTSDOWN"
-                            txt = "Set for {} of {}".format(num_set, self.selected_face_count)
-                            prop_states[prop] = 1 # enable all on button press
-
-                        row.label(text=txt, icon=ico)
-
-            else:
-                self.layout.row().label(text="Select at least one face.", icon='INFO')
+        self.layout.prop(context.object.data.revolt, "face_material", text="Material".format(str_supp))
+        self.layout.prop(context.object.data.revolt, "face_texture", text="Texture".format(str_supp))
+        self.layout.prop(context.object.data.revolt, "face_double_sided", text="{}Double sided".format(str_supp))
+        self.layout.prop(context.object.data.revolt, "face_translucent", text="{}Translucent".format(str_supp))
+        self.layout.prop(context.object.data.revolt, "face_mirror", text="{}Mirror".format(str_supp))
+        self.layout.prop(context.object.data.revolt, "face_additive", text="{}Additive blending".format(str_supp))
+        self.layout.prop(context.object.data.revolt, "face_texture_animation", text="{}Texture animation".format(str_supp))
+        self.layout.prop(context.object.data.revolt, "face_no_envmapping", text="{}No EnvMap".format(str_supp))
+        self.layout.prop(context.object.data.revolt, "face_envmapping", text="{}EnvMap".format(str_supp))
 
 # panel for setting vertex colors
 class RevoltVertexPanel(bpy.types.Panel):
     bl_label = "HabitatB Vertex Colors"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "data"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
+    bl_context = "mesh_edit"
+    bl_category = "Re-Volt"
 
     selection = None
     selected_face_count = None
@@ -188,7 +229,7 @@ class RevoltVertexPanel(bpy.types.Panel):
             elif self.selection:
                 row = self.layout.row()
                 row.operator("vertexcolor.set", text="Grey 50%").number=50
-                row.operator("vertexcolor.set", text="Not a button.")
+                row.operator("vertexcolor.set", text="Secret Button.")
                 row = self.layout.row()
                 col = row.column(align=True)
                 col.alignment = 'EXPAND'

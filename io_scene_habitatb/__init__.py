@@ -47,7 +47,7 @@ from bpy_extras.io_utils import ImportHelper, ExportHelper, axis_conversion
 locals_copy = dict(locals())
 for var in locals_copy:
     tmp = locals_copy[var]
-    if isinstance(tmp, types.ModuleType) and tmp.__package__ == "io_mesh_prm":
+    if isinstance(tmp, types.ModuleType) and tmp.__package__ == "io_scene_habitatb":
       print ("Reloading: %s"%(var))
       imp.reload(tmp)
 
@@ -110,6 +110,20 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
     flag3_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 8), set = lambda s,v: helpers.set_flag_long(s, v, 8))
     flag4_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 12), set = lambda s,v: helpers.set_flag_long(s, v, 12))
     texture = IntProperty(name = "Texture")
+
+class RevoltMeshProperties(bpy.types.PropertyGroup):
+    face_material = EnumProperty(name = "Material", items = helpers.materials, get = helpers.get_face_material, set = helpers.set_face_material)
+    face_texture = IntProperty(name = "Texture", get = helpers.get_face_texture, set = helpers.set_face_texture)
+    face_double_sided = BoolProperty(name = "Double sided", get = lambda s: bool(helpers.get_face_property(s) & 2), set = lambda s,v: helpers.set_face_property(s, v, 2))
+    face_translucent = BoolProperty(name = "Translucent", get = lambda s: bool(helpers.get_face_property(s) & 4), set = lambda s,v: helpers.set_face_property(s, v, 4))
+    face_mirror = BoolProperty(name = "Mirror", get = lambda s: bool(helpers.get_face_property(s) & 128), set = lambda s,v: helpers.set_face_property(s, v, 128))
+    face_additive = BoolProperty(name = "Additive blending", get = lambda s: bool(helpers.get_face_property(s) & 256), set = lambda s,v: helpers.set_face_property(s, v, 256))
+    face_texture_animation = BoolProperty(name = "Texture animation", get = lambda s: bool(helpers.get_face_property(s) & 512), set = lambda s,v: helpers.set_face_property(s, v, 512))
+    face_no_envmapping = BoolProperty(name = "No EnvMapping (.PRM)", get = lambda s: bool(helpers.get_face_property(s) & 1024), set = lambda s,v: helpers.set_face_property(s, v, 1024))
+    face_envmapping = BoolProperty(name = "EnvMapping (.W)", get = lambda s: bool(helpers.get_face_property(s) & 2048), set = lambda s,v: helpers.set_face_property(s, v, 2048))
+    export_as_prm = BoolProperty(name = "Export as mesh (.PRM)")
+    export_as_ncp = BoolProperty(name = "Export as hitbox (.NCP)")
+    export_as_w = BoolProperty(name = "Export as world (.W)")
 
 class ImportPRM(bpy.types.Operator, ImportHelper):
     """Import from PRM file format (.prm, .m)"""
@@ -241,6 +255,8 @@ def register():
     #bpy.types.Scene.ui_properties = bpy.props.PointerProperty(type=ui.UIProperties)
 
     bpy.types.Object.revolt = PointerProperty(type = RevoltObjectProperties)
+    bpy.types.Mesh.revolt = PointerProperty(type = RevoltMeshProperties)
+
 
 
 def unregister():
@@ -254,6 +270,7 @@ def unregister():
     # del bpy.types.Scene.ui_properties
 
     del bpy.types.Object.revolt
+    del bpy.types.Mesh.revolt
 
 
 
