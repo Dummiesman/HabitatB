@@ -85,7 +85,7 @@ def set_face_texture(self, value):
 
 def get_face_property(self):
     bm = bmesh.from_edit_mesh(bpy.context.object.data)
-    layer = bm.faces.layers.int.get("revolt_face_type") or bm.faces.layers.int.new("revolt_face_type")
+    layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
     selected_faces = [face for face in bm.faces if face.select]
     if len(selected_faces) == 0:
         return 0
@@ -96,7 +96,7 @@ def get_face_property(self):
             
 def set_face_property(self, value, mask):
     bm = bmesh.from_edit_mesh(bpy.context.object.data)
-    layer = bm.faces.layers.int.get("revolt_face_type") or bm.faces.layers.int.new("revolt_face_type")
+    layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
     for face in bm.faces:
         if face.select:
             # for arg in args:

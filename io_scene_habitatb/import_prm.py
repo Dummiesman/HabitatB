@@ -34,7 +34,7 @@ def load_prm_file(file):
     uv_layer = bm.loops.layers.uv.new("uv")    
     vc_layer = bm.loops.layers.color.new("color")
     va_layer = bm.loops.layers.color.new("alpha")
-    flag_layer = bm.faces.layers.int.new("revolt_face_type")
+    flag_layer = bm.faces.layers.int.new("flags")
     texture_layer = bm.faces.layers.int.new("texture")
     
     scn.objects.link(ob)

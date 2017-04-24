@@ -11,6 +11,8 @@
 import bpy, struct, bmesh, mathutils, re, os, glob
 import time, struct
 
+from . import const
+
 export_filename = None
 
 ######################################################
@@ -20,16 +22,11 @@ def load_w_file(file):
     scn = bpy.context.scene
 
     mesh_count = struct.unpack('<l', file.read(4))[0]
-    
+
+    main_w = bpy.data.objects.new(bpy.path.basename(export_filename), None )
+    bpy.context.scene.objects.link(main_w)
+
     for mesh in range(mesh_count):
-
-        # bound_ball_center = struct.unpack('<fff', file.read(12))
-        # bound_ball_radius = struct.unpack('<f', file.read(4))
-        # print(bound_ball_radius, bound_ball_center)
-
-        # bbox = struct.unpack('<ffffff', file.read(24))
-
-        file.read(40)
 
         # get mesh name
         mesh_name = bpy.path.basename(export_filename)
@@ -37,106 +34,115 @@ def load_w_file(file):
         # add a mesh and link it to the scene
         me = bpy.data.meshes.new(mesh_name)
         ob = bpy.data.objects.new(mesh_name, me)
+        ob.parent = main_w
 
         # create bmesh
         bm = bmesh.new()
         bm.from_mesh(me)
 
+        # link object to scene
+        scn.objects.link(ob)
+        scn.objects.active = ob
+
+        bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+
         # create layers and set names
         uv_layer = bm.loops.layers.uv.new("uv")    
         vc_layer = bm.loops.layers.color.new("color")
         va_layer = bm.loops.layers.color.new("alpha")
-        flag_layer = bm.faces.layers.int.new("revolt_face_type")
+        flag_layer = bm.faces.layers.int.new("flags")
         texture_layer = bm.faces.layers.int.new("texture")
-        
-        scn.objects.link(ob)
-        scn.objects.active = ob
-        
-        bpy.ops.object.mode_set(mode='EDIT', toggle=False)
-        
-        # read w header
-        poly_count, vertex_count = struct.unpack('<HH', file.read(4))
-        poly_offset = file.tell()
-        
-        # skip polys real quick
-        file.seek(60 * poly_count, 1)
-        
+
+        # read bound ball
+        bound_ball_center = struct.unpack("<3f", file.read(12))
+        bound_ball_radius = struct.unpack("<f", file.read(4))[0]
+
+        # read bbox
+        xlo, xhi = struct.unpack("<ff", file.read(8))
+        ylo, yhi = struct.unpack("<ff", file.read(8))
+        zlo, zhi = struct.unpack("<ff", file.read(8))
+
+        polygon_count = struct.unpack("<h", file.read(2))[0]
+        vertex_count = struct.unpack("<h", file.read(2))[0]
+
+        polygons = []
+
+        # read polygons
+        for p in range(polygon_count):
+            polygon = {}
+            polygon["type"] = struct.unpack("<h", file.read(2))[0]
+            polygon["texture"] = struct.unpack("<h", file.read(2))[0]
+            polygon["vertex_indices"] = struct.unpack("<4h", file.read(8))
+            polygon["colors"] = struct.unpack("<4L", file.read(16))
+            polygon["uv"] = struct.unpack("<8f", file.read(32))
+            polygons.append(polygon)
+
+        vertices = []
+
         # read vertices
-        print("reading verts at " + str(file.tell()))
-        for vert in range(vertex_count):
-          location = struct.unpack('<fff', file.read(12))
-          normal = struct.unpack('<fff', file.read(12))
-          bm.verts.new((location[0] * 0.01, location[2] * 0.01, location[1] * -0.01)) # RV units are giant!!
+        for v in range(vertex_count):
+            vertex = {}
+            vertex["position"] = struct.unpack("<3f", file.read(12))
+            vertex["normal"] = struct.unpack("<3f", file.read(12))
+            vertices.append(vertex)
+
         
+        # add it all to the mesh
+        for vert in range(vertex_count):
+            location = vertices[vert]["position"]
+            bm.verts.new((location[0] * 0.01, location[2] * 0.01, location[1] * -0.01)) # RV units are giant!!
+
         # ensure lookup table before continuing
         bm.verts.ensure_lookup_table()
-        
-        # read faces
-        file.seek(poly_offset, 0)
-        for poly in range(poly_count):
-          flags, texture = struct.unpack('<Hh', file.read(4))
-          indices = struct.unpack('<HHHH', file.read(8))
-          
-          # read colors and uvs
-          colors = struct.unpack('<BBBBBBBBBBBBBBBB', file.read(16))
-          uvs = struct.unpack('ffffffff', file.read(32))
-          
-          # check if we have a quad
-          is_quad = (flags & 0x001)
-          num_loops = 4 if is_quad else 3
 
-          # is this quad actually a triangle?
-          if is_quad and len(set(indices)) == 3:
-            is_quad = False
+        for p in range(polygon_count):
+            poly = polygons[p]
+            indices = poly["vertex_indices"]
+            uvs = poly["uv"]
+            colors = poly["colors"]
 
-          # check if it's a valid face
-          if len(set(indices)) < 2:
-            continue
-          
-          # faces are reversed also
-          try:
-            face = None
-            if is_quad:
-              face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]], bm.verts[indices[3]]))
-            else:
-              face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]])) 
-              
-            # set layer properties
-            for loop in range(num_loops):
-              # set uvs
-              uv = (uvs[loop * 2], 1 - uvs[loop * 2 + 1])
-              face.loops[loop][uv_layer].uv = uv
-              
-              # set colors
-              color_idx = loop * 4
-              color_b = float(colors[color_idx]) / 255
-              color_g = float(colors[color_idx + 1]) / 255
-              color_r = float(colors[color_idx + 2]) / 255
-              color_a = 1.0 - (float(colors[color_idx + 3]) / 255)
-              
-              # apply colors and alpha to layers
-              face.loops[loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
-              face.loops[loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
-              
-              # setup flag layer
-              # flags_bytes = flags.to_bytes(2, byteorder='little', signed=False)
-              # flagR = float(flags_bytes[0]) / 255.0
-              # flagB = float(flags_bytes[1]) / 255.0
-              # face.loops[loop][flag_layer] = mathutils.Color((flagR, 1.0, flagB))
-              
-            # setup face
-            face[flag_layer] = flags
-            face[texture_layer] = texture
-            face.smooth = True
-            face.normal_flip()
+            # check if the poly is quad
+            is_quad = poly["type"] & const.QUAD
+            if is_quad and len(set(indices)) == 3:
+                is_quad = False
+            num_loops = 4 if is_quad else 3
 
-          except ValueError as e:
-            print(e)
-            # set existing face as double-sided
-            #existing_face = bm.faces.get([bm.verts[i] for i in (indices if is_quad else indices[:3])])
-            #existing_face[flag_layer] |= 0x002
-          
-         
+
+            # check if it's a valid face
+            # if len(set(indices)) > 2:
+            try:
+                face = None
+                if is_quad:
+                  face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]], bm.verts[indices[3]]))
+                else:
+                  face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]])) 
+                  
+                # set layer properties
+                for loop in range(num_loops):
+                  # set uvs
+                  uv = (uvs[loop * 2], 1 - uvs[loop * 2 + 1])
+                  face.loops[loop][uv_layer].uv = uv
+                  
+                  # set colors
+                  color_b = float(colors[0]) / 255
+                  color_g = float(colors[1]) / 255
+                  color_r = float(colors[2]) / 255
+                  color_a = 1.0 - (float(colors[3]) / 255)
+                  
+                  # apply colors and alpha to layers
+                  face.loops[loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
+                  face.loops[loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
+                  
+                # setup face
+                face[flag_layer] = poly["type"]
+                face[texture_layer] = poly["texture"]
+                face.smooth = True
+                face.normal_flip()
+
+            except ValueError as e:
+                print(e)
+
+
         # calculate normals
         bm.normal_update()
         

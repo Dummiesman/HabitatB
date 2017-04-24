@@ -37,7 +37,7 @@ def save_prm_file(file, ob):
     uv_layer = bm.loops.layers.uv.active
     vc_layer = bm.loops.layers.color.get("color")
     va_layer = bm.loops.layers.color.get("alpha")
-    flag_layer = bm.faces.layers.int.get("revolt_face_type")
+    flag_layer = bm.faces.layers.int.get("flags")
     texture_layer = bm.faces.layers.int.get("texture")
 
 
