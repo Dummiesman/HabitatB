@@ -66,7 +66,10 @@ def get_face_property(self):
     for face in selected_faces:
         output = output & face[layer]
     return output
-            
+
+def is_face_prop(self, face, prop):
+    return face["flags"] & prop
+
 def set_face_property(self, value, mask):
     bm = bmesh.from_edit_mesh(bpy.context.object.data)
     layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")

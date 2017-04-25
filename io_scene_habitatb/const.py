@@ -1,5 +1,6 @@
 FACE_QUAD = 0x001
 
+FACE_PROPS = [1, 2, 4, 128, 256, 512, 1024, 2048]
 
 materials = [
     ("MATERIAL_NONE", "None", "None", "", -1),

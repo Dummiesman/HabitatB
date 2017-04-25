@@ -72,6 +72,10 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
     flag2_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 4), set = lambda s,v: helpers.set_flag_long(s, v, 4))
     flag3_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 8), set = lambda s,v: helpers.set_flag_long(s, v, 8))
     flag4_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 12), set = lambda s,v: helpers.set_flag_long(s, v, 12))
+    # these flags can be set for objects other than the mentioned type (export .w to ncp, export prm as part of .w)
+    export_as_prm = BoolProperty(name = "Additionally export as Mesh (.prm)")
+    export_as_ncp = BoolProperty(name = "Additionally export as NCP (.ncp)")
+    export_as_w = BoolProperty(name = "Additionally export as World (.w)")
 
 class RevoltMeshProperties(bpy.types.PropertyGroup):
     face_material = EnumProperty(name = "Material", items = const.materials, get = helpers.get_face_material, set = helpers.set_face_material)
@@ -84,10 +88,6 @@ class RevoltMeshProperties(bpy.types.PropertyGroup):
     face_no_envmapping = BoolProperty(name = "No EnvMapping (.PRM)", get = lambda s: bool(helpers.get_face_property(s) & 1024), set = lambda s,v: helpers.set_face_property(s, v, 1024))
     face_envmapping = BoolProperty(name = "EnvMapping (.W)", get = lambda s: bool(helpers.get_face_property(s) & 2048), set = lambda s,v: helpers.set_face_property(s, v, 2048))
     
-    # these flags can be set for objects other than the mentioned type (export .w to ncp, export prm as part of .w)
-    export_as_prm = BoolProperty(name = "Additional export as mesh (.PRM)")
-    export_as_ncp = BoolProperty(name = "Additionally export as ncp (.NCP)")
-    export_as_w = BoolProperty(name = "Additionally export as world (.W)")
 
 class ImportPRM(bpy.types.Operator, ImportHelper):
     """Import from PRM file format (.prm, .m)"""
@@ -194,6 +194,32 @@ class ExportPRM(bpy.types.Operator, ExportHelper):
             axis_conversion(from_up = self.up_axis, 
                             from_forward = self.forward_axis).to_4x4() * (1 / self.scale))
 
+class ExportW(bpy.types.Operator, ExportHelper):
+    """Export to W file format (.w)"""
+    bl_idname = "export_scene.w"
+    bl_label = 'Export W'
+
+    filename_ext = ""
+    filter_glob = StringProperty(
+            default="*.w",
+            options={'HIDDEN'},
+            )
+
+    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
+    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+        
+    def execute(self, context):
+        from . import export_w
+                           
+        return export_w.save(
+            self, 
+            self.properties.filepath, 
+            context, 
+            axis_conversion(from_up = self.up_axis, 
+                            from_forward = self.forward_axis).to_4x4() * (1 / self.scale))
+
+
 class ExportNCP(bpy.types.Operator, ExportHelper):
     """Export to PRM file format (.prm, .m)"""
     bl_idname = "export_scene.ncp"
@@ -222,10 +248,10 @@ class ExportNCP(bpy.types.Operator, ExportHelper):
 
 # add menu entries
 # PRM
-def menu_func_export(self, context):
+def menu_func_export_prm(self, context):
     self.layout.operator(ExportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
 
-def menu_func_import(self, context):
+def menu_func_import_prm(self, context):
     self.layout.operator(ImportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
 
 # NCP
@@ -237,17 +263,20 @@ def menu_func_export_ncp(self, context):
 
 # W
 def menu_func_import_w(self, context):
-    self.layout.operator(ImportW.bl_idname, text="Re-Volt W (.w)")
+    self.layout.operator(ImportW.bl_idname, text="Re-Volt World (.w)")
 
+def menu_func_export_w(self, context):
+    self.layout.operator(ExportW.bl_idname, text="Re-Volt World (.w)")
 
 def register():
     bpy.utils.register_module(__name__)
 
-    bpy.types.INFO_MT_file_import.append(menu_func_import)
+    bpy.types.INFO_MT_file_import.append(menu_func_import_prm)
     bpy.types.INFO_MT_file_import.append(menu_func_import_ncp)
     bpy.types.INFO_MT_file_import.append(menu_func_import_w)
-    bpy.types.INFO_MT_file_export.append(menu_func_export)
+    bpy.types.INFO_MT_file_export.append(menu_func_export_prm)
     bpy.types.INFO_MT_file_export.append(menu_func_export_ncp)
+    bpy.types.INFO_MT_file_export.append(menu_func_export_w)
 
     #bpy.types.Scene.ui_properties = bpy.props.PointerProperty(type=ui.UIProperties)
 
@@ -257,11 +286,12 @@ def register():
 def unregister():
     bpy.utils.unregister_module(__name__)
 
-    bpy.types.INFO_MT_file_import.remove(menu_func_import)
+    bpy.types.INFO_MT_file_import.remove(menu_func_import_prm)
     bpy.types.INFO_MT_file_import.remove(menu_func_import_ncp)
     bpy.types.INFO_MT_file_import.remove(menu_func_import_w)
     bpy.types.INFO_MT_file_export.remove(menu_func_export_ncp)
-    bpy.types.INFO_MT_file_export.remove(menu_func_export)
+    bpy.types.INFO_MT_file_export.remove(menu_func_export_w)
+    bpy.types.INFO_MT_file_export.remove(menu_func_export_prm)
 
     # del bpy.types.Scene.ui_properties
 

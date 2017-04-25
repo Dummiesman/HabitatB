@@ -11,7 +11,7 @@
 import bpy
 import bmesh
 import mathutils
-from . import helpers
+from . import helpers, const
 
 from bpy.props import (
         BoolProperty,
@@ -59,13 +59,20 @@ class RevoltTypePanel(bpy.types.Panel):
     
     def draw(self, context):
         self.layout.prop(context.object.revolt, "rv_type")
-        
-        if context.object.revolt.rv_type == "OBJECT":
+        rvtype = context.object.revolt.rv_type
+        if rvtype == "OBJECT":
             self.layout.prop(context.object.revolt, "object_type", text="Object Type")
             self.layout.prop(context.object.revolt, "flag1_long", text="Setting 1")
             self.layout.prop(context.object.revolt, "flag2_long", text="Setting 2")
             self.layout.prop(context.object.revolt, "flag3_long", text="Setting 3")
             self.layout.prop(context.object.revolt, "flag4_long", text="Setting 4")
+        self.layout.label(text="Level Export:")
+        # self.layout.prop(context.object.revolt, "export_as_prm") makes no sense to have
+        if rvtype in ["OBJECT", "WORLD", "MESH", "NONE", "INSTANCE", "NCP"]:
+            self.layout.prop(context.object.revolt, "export_as_w")
+        
+        if rvtype in ["OBJECT", "WORLD", "MESH", "NONE", "INSTANCE"]:
+            self.layout.prop(context.object.revolt, "export_as_ncp")
 
 # panel for setting per-polygon mesh properties
 # class RevoltFacePropertyPanel(bpy.types.Panel):
@@ -173,26 +180,35 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
         obj = context.object
         mesh = obj.data
         bm = bmesh.from_edit_mesh(mesh)
+        flags = bm.faces.layers.int.get("flags")
         if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
             self.selected_face_count = mesh.total_face_sel
             self.selection = [face for face in bm.faces if face.select]
+        
+        # count the number of faces the flags are set for
+        count = [0, 0, 0, 0, 0, 0, 0, 0]
+        if len(self.selection) > 1:            
+            for face in self.selection:
+                for x in range(len(const.FACE_PROPS)):
+                    if face[flags] & const.FACE_PROPS[x]:
+                        count[x] += 1
 
-        if len(self.selection) > 1:
-            str_supp = "(Multiple) "
-            # str_supp = "{}/{}: ".format("X", len(self.selection))
+        rvtype = context.object.revolt.rv_type
+        if rvtype in ["MESH", "WORLD", "OBJECT", "INSTANCE"]:
+            self.layout.prop(context.object.data.revolt, "face_material", text="Material".format(""))
+            self.layout.prop(context.object.data.revolt, "face_texture", text="Texture".format(""))
+            self.layout.prop(context.object.data.revolt, "face_double_sided", text="{}: Double sided".format(count[1]))
+            self.layout.prop(context.object.data.revolt, "face_translucent", text="{}: Translucent".format(count[2]))
+            self.layout.prop(context.object.data.revolt, "face_mirror", text="{}: Mirror".format(count[3]))
+            self.layout.prop(context.object.data.revolt, "face_additive", text="{}: Additive blending".format(count[4]))
+            self.layout.prop(context.object.data.revolt, "face_texture_animation", text="{}: Texture animation".format(count[5]))
+            self.layout.prop(context.object.data.revolt, "face_no_envmapping", text="{}: No EnvMap".format(count[6]))
+            self.layout.prop(context.object.data.revolt, "face_envmapping", text="{}: EnvMap".format(count[7]))
         else:
-            str_supp = ""
-
-        self.layout.prop(context.object.data.revolt, "face_material", text="Material".format(str_supp))
-        self.layout.prop(context.object.data.revolt, "face_texture", text="Texture".format(str_supp))
-        self.layout.prop(context.object.data.revolt, "face_double_sided", text="{}Double sided".format(str_supp))
-        self.layout.prop(context.object.data.revolt, "face_translucent", text="{}Translucent".format(str_supp))
-        self.layout.prop(context.object.data.revolt, "face_mirror", text="{}Mirror".format(str_supp))
-        self.layout.prop(context.object.data.revolt, "face_additive", text="{}Additive blending".format(str_supp))
-        self.layout.prop(context.object.data.revolt, "face_texture_animation", text="{}Texture animation".format(str_supp))
-        self.layout.prop(context.object.data.revolt, "face_no_envmapping", text="{}No EnvMap".format(str_supp))
-        self.layout.prop(context.object.data.revolt, "face_envmapping", text="{}EnvMap".format(str_supp))
-
+            self.layout.label(text="Face properties are")
+            self.layout.label(text="only available for Mesh,")
+            self.layout.label(text="World, Object and")
+            self.layout.label(text="Instance types.")
 # panel for setting vertex colors
 class RevoltVertexPanel(bpy.types.Panel):
     bl_label = "HabitatB Vertex Colors"
