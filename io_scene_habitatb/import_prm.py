@@ -12,6 +12,8 @@ import bpy, struct, bmesh, re, os, glob
 import time, struct
 from mathutils import Vector, Color
 
+from . import const
+
 export_filename = None
 
 ######################################################
@@ -73,7 +75,7 @@ def load_prm_file(file, matrix):
       uvs = struct.unpack('ffffffff', file.read(32))
       
       # check if we have a quad
-      is_quad = (flags & 0x001)
+      is_quad = (flags & const.FACE_QUAD)
       num_loops = 4 if is_quad else 3
 
       # is this quad actually a triangle?

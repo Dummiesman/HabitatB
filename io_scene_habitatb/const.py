@@ -1,5 +1,32 @@
-QUAD = 0x001
+FACE_QUAD = 0x001
 
+
+materials = [
+    ("MATERIAL_NONE", "None", "None", "", -1),
+    ("MATERIAL_DEFAULT", "Default", "None", "", 0),
+    ("MATERIAL_MARBLE", "Marble", "None", "", 1),
+    ("MATERIAL_STONE", "Stone", "None", "", 2),
+    ("MATERIAL_WOOD", "Wood", "None", "", 3),
+    ("MATERIAL_SAND", "Sand", "None", "", 4),
+    ("MATERIAL_PLASTIC", "Plastic", "None", "", 5),
+    ("MATERIAL_CARPETTILE", "Carpet tile", "None", "", 6),
+    ("MATERIAL_CARPETSHAG", "Carpet shag", "None", "", 7),
+    ("MATERIAL_BOUNDARY", "Boundary", "None", "", 8),
+    ("MATERIAL_GLASS", "Glass", "None", "", 9),
+    ("MATERIAL_ICE1", "Ice 1", "None", "", 10),
+    ("MATERIAL_METAL", "Metal", "None", "", 11),
+    ("MATERIAL_GRASS", "Grass", "None", "", 12),
+    ("MATERIAL_BUMPMETAL", "Bump metal", "None", "", 13),
+    ("MATERIAL_PEBBLES", "Pebbles", "None", "", 14),
+    ("MATERIAL_GRAVEL", "Gravel", "None", "", 15),
+    ("MATERIAL_CONVEYOR1", "Conveyor 1", "None", "", 16),
+    ("MATERIAL_CONVEYOR2", "Conveyor 2", "None", "", 17),
+    ("MATERIAL_DIRT1", "Dirt 1", "None", "", 18),
+    ("MATERIAL_DIRT2", "Dirt 2", "None", "", 19),
+    ("MATERIAL_DIRT3", "Dirt 3", "None", "", 20),
+    ("MATERIAL_ICE2", "Ice 2", "None", "", 21),
+    ("MATERIAL_ICE3", "Ice 3", "None", "", 22)
+    ]
 
 object_types = [
     ("OBJECT_TYPE_CAR", "Car", "Car", "", -1),

@@ -13,7 +13,7 @@ import os.path as path
 
 import bpy, bmesh
 from mathutils import Color, Vector
-from . import helpers
+from . import helpers, const
 
 ######################################################
 # EXPORT MAIN FILES
@@ -56,7 +56,7 @@ def save_prm_file(file, ob, matrix):
 
       # set the quad-flag if the poly is quadratic
       if is_quad:
-        face[texture_layer] |= 0x001
+        face[texture_layer] |= const.FACE_QUAD
 
       # write the flags
       file.write(struct.pack("<H", face[flag_layer]))
@@ -94,8 +94,8 @@ def save_prm_file(file, ob, matrix):
 
     # export vertex positions and normals
     for vertex in bm.verts:
-      coord = Vector(vertex.co[0], vertex.co[1], vertex.co[2]) * matrix
-      normal = Vector(vertex.normal[0], vertex.normal[1], vertex.normal[2]) * matrix
+      coord = Vector((vertex.co[0], vertex.co[1], vertex.co[2])) * matrix
+      normal = Vector((vertex.normal[0], vertex.normal[1], vertex.normal[2])) * matrix
       file.write(struct.pack("<fff", *coord))
       file.write(struct.pack("<fff", *normal))
 

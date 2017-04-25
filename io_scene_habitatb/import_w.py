@@ -103,7 +103,7 @@ def load_w_file(file, matrix):
             colors = poly["colors"]
 
             # check if the poly is quad
-            is_quad = poly["type"] & const.QUAD
+            is_quad = poly["type"] & const.FACE_QUAD
             if is_quad and len(set(indices)) == 3:
                 is_quad = False
             num_loops = 4 if is_quad else 3

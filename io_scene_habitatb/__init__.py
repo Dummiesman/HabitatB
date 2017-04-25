@@ -51,8 +51,7 @@ for var in locals_copy:
       print ("Reloading: %s"%(var))
       imp.reload(tmp)
 
-# Object types and properties
-# The flags are for the .fob file and the .fin file (game objects and mesh instances)
+# object properties for all rv objects
 class RevoltObjectProperties(bpy.types.PropertyGroup):
     rv_type = EnumProperty(name = "Type", items = (("NONE", "None", "None"), 
                                                 ("MESH", "Mesh (.prm)", "Mesh"), 
@@ -62,16 +61,20 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
                                                 ("NCP", "Collision (.ncp)", "Collision (NCP)"),
                                                 ("HULL", "Hull (.hul)", "Hull"),
                                                 ))
+    # this is for setting the object type (mesh, w, ncp, fin, ...)
     object_type = EnumProperty(name = "Object type", items = const.object_types)
+    # this is the flags layer for meshes
     flags = IntVectorProperty(name = "Flags", size = 16)
+    texture = IntProperty(name = "Texture") # deprecated, could be removed since textures are saved per-face now
+    # this is for fin and fob file entries: each object can have unique settings. 
+    # fin files have predefined settings
     flag1_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 0), set = lambda s,v: helpers.set_flag_long(s, v, 0))
     flag2_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 4), set = lambda s,v: helpers.set_flag_long(s, v, 4))
     flag3_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 8), set = lambda s,v: helpers.set_flag_long(s, v, 8))
     flag4_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 12), set = lambda s,v: helpers.set_flag_long(s, v, 12))
-    texture = IntProperty(name = "Texture")
 
 class RevoltMeshProperties(bpy.types.PropertyGroup):
-    face_material = EnumProperty(name = "Material", items = helpers.materials, get = helpers.get_face_material, set = helpers.set_face_material)
+    face_material = EnumProperty(name = "Material", items = const.materials, get = helpers.get_face_material, set = helpers.set_face_material)
     face_texture = IntProperty(name = "Texture", get = helpers.get_face_texture, set = helpers.set_face_texture)
     face_double_sided = BoolProperty(name = "Double sided", get = lambda s: bool(helpers.get_face_property(s) & 2), set = lambda s,v: helpers.set_face_property(s, v, 2))
     face_translucent = BoolProperty(name = "Translucent", get = lambda s: bool(helpers.get_face_property(s) & 4), set = lambda s,v: helpers.set_face_property(s, v, 4))
@@ -80,9 +83,11 @@ class RevoltMeshProperties(bpy.types.PropertyGroup):
     face_texture_animation = BoolProperty(name = "Texture animation", get = lambda s: bool(helpers.get_face_property(s) & 512), set = lambda s,v: helpers.set_face_property(s, v, 512))
     face_no_envmapping = BoolProperty(name = "No EnvMapping (.PRM)", get = lambda s: bool(helpers.get_face_property(s) & 1024), set = lambda s,v: helpers.set_face_property(s, v, 1024))
     face_envmapping = BoolProperty(name = "EnvMapping (.W)", get = lambda s: bool(helpers.get_face_property(s) & 2048), set = lambda s,v: helpers.set_face_property(s, v, 2048))
-    export_as_prm = BoolProperty(name = "Export as mesh (.PRM)")
-    export_as_ncp = BoolProperty(name = "Export as hitbox (.NCP)")
-    export_as_w = BoolProperty(name = "Export as world (.W)")
+    
+    # these flags can be set for objects other than the mentioned type (export .w to ncp, export prm as part of .w)
+    export_as_prm = BoolProperty(name = "Additional export as mesh (.PRM)")
+    export_as_ncp = BoolProperty(name = "Additionally export as ncp (.NCP)")
+    export_as_w = BoolProperty(name = "Additionally export as world (.W)")
 
 class ImportPRM(bpy.types.Operator, ImportHelper):
     """Import from PRM file format (.prm, .m)"""
@@ -103,11 +108,6 @@ class ImportPRM(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         from . import import_prm
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "filter_glob",
-                                            "check_existing",
-                                            ))
 
         return import_prm.load(
             self, 
@@ -134,11 +134,6 @@ class ImportW(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         from . import import_w
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "filter_glob",
-                                            "check_existing",
-                                            ))
 
         return import_w.load(
             self, 
@@ -165,14 +160,6 @@ class ImportNCP(bpy.types.Operator, ImportHelper):
     
     def execute(self, context):
         from . import import_ncp
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "up_axis",
-                                            "scale",
-                                            "forward_axis",
-                                            "filter_glob",
-                                            "check_existing",
-
-                                            ))
 
         return import_ncp.load(
             self, 
@@ -199,13 +186,7 @@ class ExportPRM(bpy.types.Operator, ExportHelper):
         
     def execute(self, context):
         from . import export_prm
-        
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "filter_glob",
-                                            "check_existing",
-                                            ))
-                                    
+                           
         return export_prm.save(
             self, 
             self.properties.filepath, 
@@ -231,11 +212,6 @@ class ExportNCP(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         from . import export_ncp
         
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "filter_glob",
-                                            "check_existing",
-                                            ))
                                     
         return export_ncp.save(
             self, 
@@ -244,20 +220,22 @@ class ExportNCP(bpy.types.Operator, ExportHelper):
             axis_conversion(from_up = self.up_axis, from_forward = self.forward_axis).to_4x4() * (1 / self.scale))
 
 
-# Add to a menu
+# add menu entries
+# PRM
 def menu_func_export(self, context):
     self.layout.operator(ExportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
 
 def menu_func_import(self, context):
     self.layout.operator(ImportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
 
-
+# NCP
 def menu_func_import_ncp(self, context):
     self.layout.operator(ImportNCP.bl_idname, text="Re-Volt NCP (.ncp)")
 
 def menu_func_export_ncp(self, context):
     self.layout.operator(ExportNCP.bl_idname, text="Re-Volt NCP (.ncp)")
 
+# W
 def menu_func_import_w(self, context):
     self.layout.operator(ImportW.bl_idname, text="Re-Volt W (.w)")
 
@@ -276,8 +254,6 @@ def register():
     bpy.types.Object.revolt = PointerProperty(type = RevoltObjectProperties)
     bpy.types.Mesh.revolt = PointerProperty(type = RevoltMeshProperties)
 
-
-
 def unregister():
     bpy.utils.unregister_module(__name__)
 
@@ -291,7 +267,6 @@ def unregister():
 
     del bpy.types.Object.revolt
     del bpy.types.Mesh.revolt
-
 
 
 if __name__ == "__main__":

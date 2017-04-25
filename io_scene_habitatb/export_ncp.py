@@ -12,7 +12,7 @@ import time, struct, math
 import os.path as path
 from math import sqrt, pow, ceil, floor, pi
 import bpy, bmesh, mathutils
-from . import helpers
+from . import helpers, const
 
 
 
@@ -66,28 +66,28 @@ def save_ncp_file(file, ob, matrix):
         file.write(struct.pack("<6f", min_point[0], max_point[0], min_point[1], max_point[1], min_point[2], max_point[2]))
         
     # write the lookup grid.
-    raster_size = 1024
+    grid_size = 1024
     x_coords = [(v.co * matrix).x for v in bm.verts]
     z_coords = [(v.co * matrix).z for v in bm.verts]
     min_x = min(x_coords)
     max_x = max(x_coords)
     min_z = min(z_coords)
     max_z = max(z_coords)
-    x_size = ceil((max_x - min_x) / raster_size)
-    z_size = ceil((max_z - min_z) / raster_size)
+    x_size = ceil((max_x - min_x) / grid_size)
+    z_size = ceil((max_z - min_z) / grid_size)
     lookup_table = [[] for n in range(x_size * z_size)]
     
     for face in bm.faces:
         verts = [v.co * matrix for v in face.verts]
-        from_x = floor((min([v.x for v in verts]) - min_x) / raster_size)
-        to_x = ceil((max([v.x for v in verts]) - min_x) / raster_size)
-        from_z = floor((min([v.z for v in verts]) - min_z) / raster_size)
-        to_z = ceil((max([v.z for v in verts]) - min_z) / raster_size)
+        from_x = floor((min([v.x for v in verts]) - min_x) / grid_size)
+        to_x = ceil((max([v.x for v in verts]) - min_x) / grid_size)
+        from_z = floor((min([v.z for v in verts]) - min_z) / grid_size)
+        to_z = ceil((max([v.z for v in verts]) - min_z) / grid_size)
         for x in range(from_x, to_x):
             for z in range(from_z, to_z):
                 lookup_table[x + z * x_size].append(face.index)
     
-    file.write(struct.pack("<5f", min_x, min_z, x_size, z_size, raster_size))
+    file.write(struct.pack("<5f", min_x, min_z, x_size, z_size, grid_size))
     for list in lookup_table:
         file.write(struct.pack("<l", len(list)))
         for index in list:
