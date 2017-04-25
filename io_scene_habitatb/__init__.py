@@ -80,13 +80,15 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
 class RevoltMeshProperties(bpy.types.PropertyGroup):
     face_material = EnumProperty(name = "Material", items = const.materials, get = helpers.get_face_material, set = helpers.set_face_material)
     face_texture = IntProperty(name = "Texture", get = helpers.get_face_texture, set = helpers.set_face_texture)
-    face_double_sided = BoolProperty(name = "Double sided", get = lambda s: bool(helpers.get_face_property(s) & 2), set = lambda s,v: helpers.set_face_property(s, v, 2))
-    face_translucent = BoolProperty(name = "Translucent", get = lambda s: bool(helpers.get_face_property(s) & 4), set = lambda s,v: helpers.set_face_property(s, v, 4))
-    face_mirror = BoolProperty(name = "Mirror", get = lambda s: bool(helpers.get_face_property(s) & 128), set = lambda s,v: helpers.set_face_property(s, v, 128))
-    face_additive = BoolProperty(name = "Additive blending", get = lambda s: bool(helpers.get_face_property(s) & 256), set = lambda s,v: helpers.set_face_property(s, v, 256))
-    face_texture_animation = BoolProperty(name = "Texture animation", get = lambda s: bool(helpers.get_face_property(s) & 512), set = lambda s,v: helpers.set_face_property(s, v, 512))
-    face_no_envmapping = BoolProperty(name = "No EnvMapping (.PRM)", get = lambda s: bool(helpers.get_face_property(s) & 1024), set = lambda s,v: helpers.set_face_property(s, v, 1024))
-    face_envmapping = BoolProperty(name = "EnvMapping (.W)", get = lambda s: bool(helpers.get_face_property(s) & 2048), set = lambda s,v: helpers.set_face_property(s, v, 2048))
+    face_double_sided = BoolProperty(name = "Double sided", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_DOUBLE), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_DOUBLE))
+    face_translucent = BoolProperty(name = "Translucent", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_TRANSLUCENT), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_TRANSLUCENT))
+    face_mirror = BoolProperty(name = "Mirror", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_MIRROR), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_MIRROR))
+    face_additive = BoolProperty(name = "Additive blending", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_TRANSL_TYPE), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_TRANSL_TYPE))
+    face_texture_animation = BoolProperty(name = "Texture animation", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_TEXANIM), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_TEXANIM))
+    face_no_envmapping = BoolProperty(name = "No EnvMapping (.PRM)", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_NOENV), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_NOENV))
+    face_envmapping = BoolProperty(name = "EnvMapping (.W)", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_ENV), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_ENV))
+    face_cloth = BoolProperty(name = "Cloth effect (.prm)", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_CLOTH), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_CLOTH))
+    face_skip = BoolProperty(name = "Do not export", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_SKIP), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_SKIP))
     
 
 class ImportPRM(bpy.types.Operator, ImportHelper):
@@ -122,7 +124,7 @@ class ImportW(bpy.types.Operator, ImportHelper):
     bl_label = 'Import W'
     bl_options = {'UNDO'}
 
-    filename_ext = ".prm"
+    filename_ext = ".w"
     filter_glob = StringProperty(
             default="*.w", 
             options={'HIDDEN'},

@@ -180,23 +180,30 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
         obj = context.object
         mesh = obj.data
         bm = bmesh.from_edit_mesh(mesh)
-        flags = bm.faces.layers.int.get("flags")
+        flags = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
+        texture = bm.faces.layers.int.get("texture") or bm.faces.layers.int.new("texture")
         if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
             self.selected_face_count = mesh.total_face_sel
             self.selection = [face for face in bm.faces if face.select]
         
         # count the number of faces the flags are set for
-        count = [0, 0, 0, 0, 0, 0, 0, 0]
-        if len(self.selection) > 1:            
-            for face in self.selection:
-                for x in range(len(const.FACE_PROPS)):
-                    if face[flags] & const.FACE_PROPS[x]:
-                        count[x] += 1
+        count = [0] * len(const.FACE_PROPS)
+        # if len(self.selection) > 1:            
+        for face in self.selection:
+            for x in range(len(const.FACE_PROPS)):
+                if face[flags] & const.FACE_PROPS[x]:
+                    count[x] += 1
+
 
         rvtype = context.object.revolt.rv_type
         if rvtype in ["MESH", "WORLD", "OBJECT", "INSTANCE"]:
             self.layout.prop(context.object.data.revolt, "face_material", text="Material".format(""))
-            self.layout.prop(context.object.data.revolt, "face_texture", text="Texture".format(""))
+            if len(self.selection) > 1:
+                self.layout.label(text="Texture will be applied to all selected faces.")
+                self.layout.prop(context.object.data.revolt, "face_texture", text="Texture (multiple)")
+            else:
+                self.layout.prop(context.object.data.revolt, "face_texture", text="Texture".format(""))
+                
             self.layout.prop(context.object.data.revolt, "face_double_sided", text="{}: Double sided".format(count[1]))
             self.layout.prop(context.object.data.revolt, "face_translucent", text="{}: Translucent".format(count[2]))
             self.layout.prop(context.object.data.revolt, "face_mirror", text="{}: Mirror".format(count[3]))
@@ -204,6 +211,8 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
             self.layout.prop(context.object.data.revolt, "face_texture_animation", text="{}: Texture animation".format(count[5]))
             self.layout.prop(context.object.data.revolt, "face_no_envmapping", text="{}: No EnvMap".format(count[6]))
             self.layout.prop(context.object.data.revolt, "face_envmapping", text="{}: EnvMap".format(count[7]))
+            self.layout.prop(context.object.data.revolt, "face_cloth", text="{}: Cloth effect".format(count[8]))
+            self.layout.prop(context.object.data.revolt, "face_skip", text="{}: Do not export".format(count[9]))
         else:
             self.layout.label(text="Face properties are")
             self.layout.label(text="only available for Mesh,")

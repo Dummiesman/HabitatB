@@ -10,7 +10,7 @@
 
 import bpy, struct, bmesh, re, os, glob
 import time, struct
-
+import mathutils
 from mathutils import Vector, Color
 from . import const
 
@@ -24,7 +24,7 @@ def load_w_file(file, matrix):
 
     mesh_count = struct.unpack('<l', file.read(4))[0]
 
-    main_w = bpy.data.objects.new(bpy.path.basename(export_filename), None )
+    main_w = bpy.data.objects.new(bpy.path.basename(export_filename), None)
     bpy.context.scene.objects.link(main_w)
 
     for mesh in range(mesh_count):
@@ -74,7 +74,7 @@ def load_w_file(file, matrix):
             polygon["type"] = struct.unpack("<h", file.read(2))[0]
             polygon["texture"] = struct.unpack("<h", file.read(2))[0]
             polygon["vertex_indices"] = struct.unpack("<4h", file.read(8))
-            polygon["colors"] = struct.unpack("<4L", file.read(16))
+            polygon["colors"] = struct.unpack("<BBBBBBBBBBBBBBBB", file.read(16))
             polygon["uv"] = struct.unpack("<8f", file.read(32))
             polygons.append(polygon)
 
@@ -123,12 +123,13 @@ def load_w_file(file, matrix):
                   # set uvs
                   uv = (uvs[loop * 2], 1 - uvs[loop * 2 + 1])
                   face.loops[loop][uv_layer].uv = uv
-                  
+
                   # set colors
-                  color_b = float(colors[0]) / 255
-                  color_g = float(colors[1]) / 255
-                  color_r = float(colors[2]) / 255
-                  color_a = 1.0 - (float(colors[3]) / 255)
+                  color_idx = loop * 4
+                  color_b = float(colors[color_idx]) / 255
+                  color_g = float(colors[color_idx + 1]) / 255
+                  color_r = float(colors[color_idx + 2]) / 255
+                  color_a = 1.0 - (float(colors[color_idx + 3]) / 255)
                   
                   # apply colors and alpha to layers
                   face.loops[loop][vc_layer] = Color((color_r, color_g, color_b))

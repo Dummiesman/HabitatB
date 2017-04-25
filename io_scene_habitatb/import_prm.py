@@ -11,7 +11,7 @@
 import bpy, struct, bmesh, re, os, glob
 import time, struct
 from mathutils import Vector, Color
-
+ 
 from . import const
 
 export_filename = None
@@ -110,12 +110,6 @@ def load_prm_file(file, matrix):
           # apply colors and alpha to layers
           face.loops[loop][vc_layer] = Color((color_r, color_g, color_b))
           face.loops[loop][va_layer] = Color((color_a, color_a, color_a))
-          
-          # setup flag layer
-          # flags_bytes = flags.to_bytes(2, byteorder='little', signed=False)
-          # flagR = float(flags_bytes[0]) / 255.0
-          # flagB = float(flags_bytes[1]) / 255.0
-          # face.loops[loop][flag_layer] = Color((flagR, 1.0, flagB))
           
         # setup face
         face[flag_layer] = flags

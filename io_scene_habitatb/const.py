@@ -1,6 +1,24 @@
-FACE_QUAD = 0x001
+FACE_QUAD = 1               # 0x1
+FACE_DOUBLE = 2             # 0x2
+FACE_TRANSLUCENT = 4        # 0x4
+FACE_MIRROR = 128           # 0x80
+FACE_TRANSL_TYPE = 256      # 0x100
+FACE_TEXANIM = 512          # 0x200
+FACE_NOENV = 1024           # 0x400
+FACE_ENV = 2048             # 0x800
+FACE_CLOTH = 4096           # 0x1000
+FACE_SKIP = 8192            # 0x2000
 
-FACE_PROPS = [1, 2, 4, 128, 256, 512, 1024, 2048]
+FACE_PROPS = [FACE_QUAD, 
+              FACE_DOUBLE, 
+              FACE_TRANSLUCENT, 
+              FACE_MIRROR, 
+              FACE_TRANSL_TYPE, 
+              FACE_TEXANIM, 
+              FACE_NOENV, 
+              FACE_ENV, 
+              FACE_CLOTH, 
+              FACE_SKIP]
 
 materials = [
     ("MATERIAL_NONE", "None", "None", "", -1),
