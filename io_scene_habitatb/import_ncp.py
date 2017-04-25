@@ -108,11 +108,7 @@ def load_ncp(filepath, context, matrix):
     file.close()
 
 
-def load(operator,
-         context,
-         matrix,
-         filepath="",
-         ):
+def load(operator, filepath, context, matrix):
 
     global export_filename
     export_filename = filepath

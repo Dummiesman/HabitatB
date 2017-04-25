@@ -8,15 +8,16 @@
 # ##### END LICENSE BLOCK #####
 
 
-import bpy, struct, bmesh, mathutils, re, os, glob
+import bpy, struct, bmesh, re, os, glob
 import time, struct
+from mathutils import Vector, Color
 
 export_filename = None
 
 ######################################################
 # IMPORT MAIN FILES
 ######################################################
-def load_prm_file(file):
+def load_prm_file(file, matrix):
     scn = bpy.context.scene
     
     # get mesh name
@@ -54,7 +55,9 @@ def load_prm_file(file):
     for vert in range(vertex_count):
       location = struct.unpack('fff', file.read(12))
       normal = struct.unpack('fff', file.read(12))
-      bm.verts.new((location[0] * 0.01, location[2] * 0.01, location[1] * -0.01)) # RV units are giant!!
+
+      # create vertices multiplied by rv matrix
+      bm.verts.new(Vector((location[0], location[1], location[2])) * matrix)
     
     # ensure lookup table before continuing
     bm.verts.ensure_lookup_table()
@@ -103,14 +106,14 @@ def load_prm_file(file):
           color_a = 1.0 - (float(colors[color_idx + 3]) / 255)
           
           # apply colors and alpha to layers
-          face.loops[loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
-          face.loops[loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
+          face.loops[loop][vc_layer] = Color((color_r, color_g, color_b))
+          face.loops[loop][va_layer] = Color((color_a, color_a, color_a))
           
           # setup flag layer
           # flags_bytes = flags.to_bytes(2, byteorder='little', signed=False)
           # flagR = float(flags_bytes[0]) / 255.0
           # flagB = float(flags_bytes[1]) / 255.0
-          # face.loops[loop][flag_layer] = mathutils.Color((flagR, 1.0, flagB))
+          # face.loops[loop][flag_layer] = Color((flagR, 1.0, flagB))
           
         # setup face
         face[flag_layer] = flags
@@ -142,31 +145,28 @@ def load_prm_file(file):
 ######################################################
 # IMPORT
 ######################################################
-def load_prm(filepath,
-             context):
+def load_prm(filepath, context, matrix):
 
     print("importing PRM: %r..." % (filepath))
 
     time1 = time.clock()
     file = open(filepath, 'rb')
 
-    # start reading our pkg file
-    load_prm_file(file)
+    # start reading the prm file
+    load_prm_file(file, matrix)
 
     print(" done in %.4f sec." % (time.clock() - time1))
     file.close()
 
 
-def load(operator,
-         context,
-         filepath="",
-         ):
+def load(operator, filepath, context, matrix):
 
     global export_filename
     export_filename = filepath
     
     load_prm(filepath,
              context,
+             matrix
              )
 
     return {'FINISHED'}

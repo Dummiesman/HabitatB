@@ -11,14 +11,15 @@
 import time, struct, math
 import os.path as path
 
-import bpy, bmesh, mathutils
+import bpy, bmesh
+from mathutils import Color, Vector
 from . import helpers
 
 ######################################################
 # EXPORT MAIN FILES
 ######################################################
 
-def save_prm_file(file, ob):
+def save_prm_file(file, ob, matrix):
     scn = bpy.context.scene
     
     # get mesh name
@@ -77,8 +78,8 @@ def save_prm_file(file, ob):
       for i in vert_order:
         if i < len(face.verts):
           # get color from the channel or fall back to a default value
-          color = face.loops[i][vc_layer] if vc_layer else mathutils.Color((1, 1, 1))
-          alpha = face.loops[i][va_layer] if va_layer else mathutils.Color((1, 1, 1))
+          color = face.loops[i][vc_layer] if vc_layer else Color((1, 1, 1))
+          alpha = face.loops[i][va_layer] if va_layer else Color((1, 1, 1))
           file.write(struct.pack("<BBBB", int(color.b * 255), int(color.g * 255), int(color.r * 255), int((alpha.v) * 255)))
         else:
           file.write(struct.pack("<BBBB", 1, 1, 1, 1)) # write opaque white as default
@@ -93,8 +94,8 @@ def save_prm_file(file, ob):
 
     # export vertex positions and normals
     for vertex in bm.verts:
-      coord = (vertex.co[0] * 100, vertex.co[2] * -100, vertex.co[1] * 100)
-      normal = (vertex.normal[0], vertex.normal[2] * -1, vertex.normal[1])
+      coord = Vector(vertex.co[0], vertex.co[1], vertex.co[2]) * matrix
+      normal = Vector(vertex.normal[0], vertex.normal[1], vertex.normal[2]) * matrix
       file.write(struct.pack("<fff", *coord))
       file.write(struct.pack("<fff", *normal))
 
@@ -106,8 +107,7 @@ def save_prm_file(file, ob):
 ######################################################
 # EXPORT
 ######################################################
-def save_prm(filepath,
-             context):
+def save_prm(filepath, context, matrix):
              
     time1 = time.clock()
 
@@ -116,22 +116,16 @@ def save_prm(filepath,
 
     # write the actual data
     file = open(filepath, 'wb')
-    save_prm_file(file, ob)
+    save_prm_file(file, ob, matrix)
     file.close()
      
     # prm export complete
     print(" done in %.4f sec." % (time.clock() - time1))
 
 
-def save(operator,
-         context,
-         filepath="",
-
-         ):
+def save(operator, filepath, context, matrix):
     
     # save PRM file
-    save_prm(filepath,
-             context
-             )
+    save_prm(filepath, context, matrix)
 
     return {'FINISHED'}

@@ -39,7 +39,7 @@ from bpy_extras.io_utils import (
         ImportHelper,
         ExportHelper,
         )
-from . import helpers, ui, parameters
+from . import helpers, ui, parameters, const
 
 from bpy_extras.io_utils import ImportHelper, ExportHelper, axis_conversion
 
@@ -50,47 +50,6 @@ for var in locals_copy:
     if isinstance(tmp, types.ModuleType) and tmp.__package__ == "io_scene_habitatb":
       print ("Reloading: %s"%(var))
       imp.reload(tmp)
-
-object_types = [
-    ("OBJECT_TYPE_CAR", "Car", "Car", "", -1),
-    ("OBJECT_TYPE_BARREL", "Barrel", "Barrel", "", 1),
-    ("OBJECT_TYPE_BEACHBALL", "Beachball", "Beachball", "", 2),
-    ("OBJECT_TYPE_PLANET", "Planet", "Planet", "", 3),
-    ("OBJECT_TYPE_PLANE", "Plane", "Plane", "", 4),
-    ("OBJECT_TYPE_COPTER", "Copter", "Copter", "", 5),
-    ("OBJECT_TYPE_DRAGON", "Dragon", "Dragon", "", 6),
-    ("OBJECT_TYPE_WATER", "Water", "Water", "", 7),
-    ("OBJECT_TYPE_TROLLEY", "Trolley", "Trolley", "", 8),
-    ("OBJECT_TYPE_BOAT", "Boat", "Boat", "", 9),
-    ("OBJECT_TYPE_SPEEDUP", "Speedup", "Speedup", "", 10),
-    ("OBJECT_TYPE_RADAR", "Radar", "Radar", "", 11),
-    ("OBJECT_TYPE_BALLOON", "Balloon", "Balloon", "", 12),
-    ("OBJECT_TYPE_HORSE", "Horse", "Horse", "", 13),
-    ("OBJECT_TYPE_TRAIN", "Train", "Train", "", 14),
-    ("OBJECT_TYPE_STROBE", "Strobe", "Strobe", "", 15),
-    ("OBJECT_TYPE_FOOTBALL", "Football", "Football", "", 16),
-    ("OBJECT_TYPE_SPARKGEN", "Sparkgen", "Sparkgen", "", 17),
-    ("OBJECT_TYPE_SPACEMAN", "Spaceman", "Spaceman", "", 18),
-    ("OBJECT_TYPE_SHOCKWAVE", "Shockwave", "Shockwave", "", 19),
-    ("OBJECT_TYPE_FIREWORK", "Firework", "Firework", "", 20),
-    ("OBJECT_TYPE_PUTTYBOMB", "Puttybomb", "Puttybomb", "", 21),
-    ("OBJECT_TYPE_WATERBOMB", "Waterbomb", "Waterbomb", "", 22),
-    ("OBJECT_TYPE_ELECTROPULSE", "Electropulse", "Electropulse", "", 23),
-    ("OBJECT_TYPE_OILSLICK", "Oilslick", "Oilslick", "", 24),
-    ("OBJECT_TYPE_OILSLICK_DROPPER", "Oilslick dropper", "Oilslick dropper", "", 25),
-    ("OBJECT_TYPE_CHROMEBALL", "Chromeball", "Chromeball", "", 26),
-    ("OBJECT_TYPE_CLONE", "Clone", "Clone", "", 27),
-    ("OBJECT_TYPE_TURBO", "Turbo", "Turbo", "", 28),
-    ("OBJECT_TYPE_ELECTROZAPPED", "Electrozapped", "Electrozapped", "", 29),
-    ("OBJECT_TYPE_SPRING", "Spring", "Spring", "", 30),
-    ("OBJECT_TYPE_PICKUP", "Pickup", "Pickup", "", 31),
-    ("OBJECT_TYPE_DISSOLVEMODEL", "Dissolve model", "Dissolve model", "", 32),
-    ("OBJECT_TYPE_FLAP", "Flap", "Flap", "", 33),
-    ("OBJECT_TYPE_LASER", "Laser", "Laser", "", 34),
-    ("OBJECT_TYPE_SPLASH", "Splash", "Splash", "", 35),
-    ("OBJECT_TYPE_BOMBGLOW", "Bombglow", "Bombglow", "", 36),
-    ("OBJECT_TYPE_MAX", "Max", "Max", "", 37),
-    ]
 
 # Object types and properties
 # The flags are for the .fob file and the .fin file (game objects and mesh instances)
@@ -103,7 +62,7 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
                                                 ("NCP", "Collision (.ncp)", "Collision (NCP)"),
                                                 ("HULL", "Hull (.hul)", "Hull"),
                                                 ))
-    object_type = EnumProperty(name = "Object type", items = object_types)
+    object_type = EnumProperty(name = "Object type", items = const.object_types)
     flags = IntVectorProperty(name = "Flags", size = 16)
     flag1_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 0), set = lambda s,v: helpers.set_flag_long(s, v, 0))
     flag2_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 4), set = lambda s,v: helpers.set_flag_long(s, v, 4))
@@ -137,6 +96,11 @@ class ImportPRM(bpy.types.Operator, ImportHelper):
             options={'HIDDEN'},
             )
 
+    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
+    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+
+
     def execute(self, context):
         from . import import_prm
         keywords = self.as_keywords(ignore=("axis_forward",
@@ -145,7 +109,12 @@ class ImportPRM(bpy.types.Operator, ImportHelper):
                                             "check_existing",
                                             ))
 
-        return import_prm.load(self, context, **keywords)
+        return import_prm.load(
+            self, 
+            self.properties.filepath, 
+            context, 
+            axis_conversion(to_up = self.up_axis, 
+                            to_forward = self.forward_axis).to_4x4() * self.scale)
 
 class ImportW(bpy.types.Operator, ImportHelper):
     """Import from W file format (.w)"""
@@ -159,6 +128,10 @@ class ImportW(bpy.types.Operator, ImportHelper):
             options={'HIDDEN'},
             )
 
+    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
+    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+
     def execute(self, context):
         from . import import_w
         keywords = self.as_keywords(ignore=("axis_forward",
@@ -167,7 +140,12 @@ class ImportW(bpy.types.Operator, ImportHelper):
                                             "check_existing",
                                             ))
 
-        return import_w.load(self, context, **keywords)
+        return import_w.load(
+            self, 
+            self.properties.filepath, 
+            context, 
+            axis_conversion(to_up = self.up_axis, 
+                            to_forward = self.forward_axis).to_4x4() * self.scale)
 
 class ImportNCP(bpy.types.Operator, ImportHelper):
     """Import from NCP file format (.ncp)"""
@@ -196,7 +174,12 @@ class ImportNCP(bpy.types.Operator, ImportHelper):
 
                                             ))
 
-        return import_ncp.load(self, context, axis_conversion(to_up = self.up_axis, to_forward = self.forward_axis).to_4x4() * self.scale, self.properties.filepath)
+        return import_ncp.load(
+            self, 
+            self.properties.filepath, 
+            context, 
+            axis_conversion(to_up = self.up_axis, 
+                            to_forward = self.forward_axis).to_4x4() * self.scale)
 
 
 class ExportPRM(bpy.types.Operator, ExportHelper):
@@ -209,6 +192,10 @@ class ExportPRM(bpy.types.Operator, ExportHelper):
             default="*.prm;*.m",
             options={'HIDDEN'},
             )
+
+    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
+    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
         
     def execute(self, context):
         from . import export_prm
@@ -219,7 +206,12 @@ class ExportPRM(bpy.types.Operator, ExportHelper):
                                             "check_existing",
                                             ))
                                     
-        return export_prm.save(self, context, **keywords)
+        return export_prm.save(
+            self, 
+            self.properties.filepath, 
+            context, 
+            axis_conversion(from_up = self.up_axis, 
+                            from_forward = self.forward_axis).to_4x4() * (1 / self.scale))
 
 class ExportNCP(bpy.types.Operator, ExportHelper):
     """Export to PRM file format (.prm, .m)"""
@@ -232,11 +224,9 @@ class ExportNCP(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-
     scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
     up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
     forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-   
         
     def execute(self, context):
         from . import export_ncp
@@ -247,7 +237,11 @@ class ExportNCP(bpy.types.Operator, ExportHelper):
                                             "check_existing",
                                             ))
                                     
-        return export_ncp.save(self, context, axis_conversion(from_up = self.up_axis, from_forward = self.forward_axis).to_4x4() * (1 / self.scale), self.properties.filepath)
+        return export_ncp.save(
+            self, 
+            self.properties.filepath, 
+            context, 
+            axis_conversion(from_up = self.up_axis, from_forward = self.forward_axis).to_4x4() * (1 / self.scale))
 
 
 # Add to a menu

@@ -8,9 +8,10 @@
 # ##### END LICENSE BLOCK #####
 
 
-import bpy, struct, bmesh, mathutils, re, os, glob
+import bpy, struct, bmesh, re, os, glob
 import time, struct
 
+from mathutils import Vector, Color
 from . import const
 
 export_filename = None
@@ -18,7 +19,7 @@ export_filename = None
 ######################################################
 # IMPORT MAIN FILES
 ######################################################
-def load_w_file(file):
+def load_w_file(file, matrix):
     scn = bpy.context.scene
 
     mesh_count = struct.unpack('<l', file.read(4))[0]
@@ -90,7 +91,7 @@ def load_w_file(file):
         # add it all to the mesh
         for vert in range(vertex_count):
             location = vertices[vert]["position"]
-            bm.verts.new((location[0] * 0.01, location[2] * 0.01, location[1] * -0.01)) # RV units are giant!!
+            bm.verts.new(Vector((location[0], location[1], location[2])) * matrix)
 
         # ensure lookup table before continuing
         bm.verts.ensure_lookup_table()
@@ -130,8 +131,8 @@ def load_w_file(file):
                   color_a = 1.0 - (float(colors[3]) / 255)
                   
                   # apply colors and alpha to layers
-                  face.loops[loop][vc_layer] = mathutils.Color((color_r, color_g, color_b))
-                  face.loops[loop][va_layer] = mathutils.Color((color_a, color_a, color_a))
+                  face.loops[loop][vc_layer] = Color((color_r, color_g, color_b))
+                  face.loops[loop][va_layer] = Color((color_a, color_a, color_a))
                   
                 # setup face
                 face[flag_layer] = poly["type"]
@@ -160,8 +161,7 @@ def load_w_file(file):
 ######################################################
 # IMPORT
 ######################################################
-def load_w(filepath,
-             context):
+def load_w(filepath, context, matrix):
 
     print("importing w: %r..." % (filepath))
 
@@ -169,22 +169,17 @@ def load_w(filepath,
     file = open(filepath, 'rb')
 
     # start reading our pkg file
-    load_w_file(file)
+    load_w_file(file, matrix)
 
     print(" done in %.4f sec." % (time.clock() - time1))
     file.close()
 
 
-def load(operator,
-         context,
-         filepath="",
-         ):
+def load(operator, filepath, context, matrix):
 
     global export_filename
     export_filename = filepath
     
-    load_w(filepath,
-             context,
-             )
+    load_w(filepath, context, matrix)
 
     return {'FINISHED'}

@@ -101,8 +101,7 @@ def save_ncp_file(file, ob, matrix):
 ######################################################
 # EXPORT
 ######################################################
-def save_ncp(filepath,
-             context, matrix):
+def save_ncp(filepath, context, matrix):
              
     time1 = time.clock()
 
@@ -118,11 +117,7 @@ def save_ncp(filepath,
     print(" done in %.4f sec." % (time.clock() - time1))
 
 
-def save(operator,
-         context,
-         matrix,
-         filepath="",
-         ):
+def save(operator, filepath, context, matrix):
     
     # save ncp file
     save_ncp(filepath,
