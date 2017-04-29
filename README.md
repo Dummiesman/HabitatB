@@ -5,6 +5,9 @@ A set of Blender tools for Re-Volt. Built for Blender 2.78+
 ## Features
 List of currently supported features:
 + Import and export PRM
++ Import and export NCP
++ Import W
++ Editing face properties and vertex colors
 
 ## Links
 + [Download](https://github.com/Dummiesman/HabitatB/archive/master.zip)
