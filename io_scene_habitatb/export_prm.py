@@ -40,13 +40,14 @@ def save_prm_file(file, ob, matrix):
     va_layer = bm.loops.layers.color.get("alpha")
     flag_layer = bm.faces.layers.int.get("flags")
     texture_layer = bm.faces.layers.int.get("texture")
+    texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("texfile")
 
 
     # go through all polygons
     for face in bm.faces:
-      # get flags 
-      # figure out whether the face is quad
-      is_quad = len(face.verts) > 3
+        # get flags 
+        # figure out whether the face is quad
+        is_quad = len(face.verts) > 3
       
       # get the flag layer (bit field)
       # if flag_layer:
@@ -54,43 +55,50 @@ def save_prm_file(file, ob, matrix):
       # else:
       #   flags_int = 0 # if no flag layer is present, don't set any flags
 
-      # set the quad-flag if the poly is quadratic
-      if is_quad:
-        face[texture_layer] |= const.FACE_QUAD
+        # set the quad-flag if the poly is quadratic
+        if is_quad:
+            face[texture_layer] |= const.FACE_QUAD
 
-      # write the flags
-      file.write(struct.pack("<H", face[flag_layer]))
+        # write the flags
+        file.write(struct.pack("<H", face[flag_layer]))
 
-      # write the texture
-      file.write(struct.pack("<h", face[texture_layer]))
+        # write the textureC
+        if face[texturefile_layer].image and not ob.revolt.use_tex_num:
+            texnum = helpers.texture_to_int(face[texturefile_layer].image.name)
+        elif texture_layer:
+            texnum = face[texture_layer]
+        else:
+            texnum = -1
 
-      # get vertex order
-      vert_order = [2, 1, 0, 3] if not is_quad else [3, 2, 1, 0]
+        file.write(struct.pack("<h", texnum))
+
+        # get vertex order
+        vert_order = [2, 1, 0, 3] if not is_quad else [3, 2, 1, 0]
       
-      # write indices
-      for i in vert_order:
-        if i < len(face.verts):
-          file.write(struct.pack("<H", face.verts[i].index))
-        else:
-          file.write(struct.pack("<H", 0))
+        # write indices
+        for i in vert_order:
+            if i < len(face.verts):
+                file.write(struct.pack("<H", face.verts[i].index))
+            else:
+                file.write(struct.pack("<H", 0))
 
-      # write the vertex colors
-      for i in vert_order:
-        if i < len(face.verts):
-          # get color from the channel or fall back to a default value
-          color = face.loops[i][vc_layer] if vc_layer else Color((1, 1, 1))
-          alpha = face.loops[i][va_layer] if va_layer else Color((1, 1, 1))
-          file.write(struct.pack("<BBBB", int(color.b * 255), int(color.g * 255), int(color.r * 255), int((alpha.v) * 255)))
-        else:
-          file.write(struct.pack("<BBBB", 1, 1, 1, 1)) # write opaque white as default
+        # write the vertex colors
+        for i in vert_order:
+            if i < len(face.verts):
+              # get color from the channel or fall back to a default valueCA
+                color = face.loops[i][vc_layer] if vc_layer else Color((1, 1, 1))
+                alpha = face.loops[i][va_layer] if va_layer else Color((1, 1, 1))
+                file.write(struct.pack("<BBBB", int(color.b * 255), int(color.g * 255), int(color.r * 255), int((alpha.v) * 255)))
+            else:
+                file.write(struct.pack("<BBBB", 1, 1, 1, 1)) # write opaque white as default
 
-      # write the uv
-      for i in vert_order:
-        if i < len(face.verts) and uv_layer:
-          uv = face.loops[i][uv_layer].uv
-          file.write(struct.pack("<ff", uv[0], 1 - uv[1]))
-        else:
-          file.write(struct.pack("<ff", 0, 0))
+        # write the uv
+        for i in vert_order:
+            if i < len(face.verts) and uv_layer:
+                uv = face.loops[i][uv_layer].uv
+                file.write(struct.pack("<ff", uv[0], 1 - uv[1]))
+            else:
+                file.write(struct.pack("<ff", 0, 0))
 
     # export vertex positions and normals
     for vertex in bm.verts:

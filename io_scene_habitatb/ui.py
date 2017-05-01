@@ -73,6 +73,7 @@ class RevoltTypePanel(bpy.types.Panel):
         
         if rvtype in ["OBJECT", "WORLD", "MESH", "NONE", "INSTANCE"]:
             self.layout.prop(context.object.revolt, "export_as_ncp")
+            self.layout.prop(context.object.revolt, "use_tex_num")
 
 # panel for setting per-polygon mesh properties
 # class RevoltFacePropertyPanel(bpy.types.Panel):

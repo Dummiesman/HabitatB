@@ -76,6 +76,7 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
     export_as_prm = BoolProperty(name = "Additionally export as Mesh (.prm)")
     export_as_ncp = BoolProperty(name = "Additionally export as NCP (.ncp)")
     export_as_w = BoolProperty(name = "Additionally export as World (.w)")
+    use_tex_num = BoolProperty(name = "Keep texture number from mesh.")
 
 class RevoltMeshProperties(bpy.types.PropertyGroup):
     face_material = EnumProperty(name = "Material", items = const.materials, get = helpers.get_face_material, set = helpers.set_face_material)

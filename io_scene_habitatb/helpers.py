@@ -9,6 +9,7 @@
 
 
 import mathutils
+import math
 import struct
 import bpy
 import bmesh
@@ -23,6 +24,20 @@ NCP_NON_PLANAR = 16
 NCP_NO_SKID = 32
 NCP_OIL = 64
 
+def get_distance(v1, v2):
+    return math.sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2) + pow(v1.z - v2.z, 2))
+
+def get_texture(filename, number):
+    pass
+
+# you give texture name, it give integer, xaxaxa
+def texture_to_int(string):
+    num = ord(string[-5])-97
+
+    if num > 9 or num < -1:
+        return -1
+    else:
+        return num
 
 def get_face_material(self):
     bm = bmesh.from_edit_mesh(bpy.context.object.data)

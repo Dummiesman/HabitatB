@@ -6,7 +6,7 @@ A set of Blender tools for Re-Volt. Built for Blender 2.78+
 List of currently supported features:
 + Import and export PRM
 + Import and export NCP
-+ Import W
++ Import and export W
 + Editing face properties and vertex colors
 
 ## Links

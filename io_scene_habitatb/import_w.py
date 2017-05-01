@@ -20,6 +20,8 @@ export_filename = None
 # IMPORT MAIN FILES
 ######################################################
 def load_w_file(file, matrix):
+    path = file.name.split(os.sep)
+
     scn = bpy.context.scene
 
     mesh_count = struct.unpack('<l', file.read(4))[0]
@@ -53,6 +55,7 @@ def load_w_file(file, matrix):
         va_layer = bm.loops.layers.color.new("alpha")
         flag_layer = bm.faces.layers.int.new("flags")
         texture_layer = bm.faces.layers.int.new("texture")
+        texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("texfile")
 
         # read bound ball
         bound_ball_center = struct.unpack("<3f", file.read(12))
@@ -138,6 +141,16 @@ def load_w_file(file, matrix):
                 # setup face
                 face[flag_layer] = poly["type"]
                 face[texture_layer] = poly["texture"]
+
+                texture_name = path[-2].lower() + chr(97 + poly["texture"]) + ".bmp"
+                image = bpy.data.images.get(texture_name)
+                if not image:
+                    texture_path = os.sep.join([*path[:-1], texture_name])
+                    if os.path.exists(texture_path):
+                        image = bpy.data.images.load(texture_path)
+                    else:
+                        print("Texture not found: ", texture_path, "Number", poly["texture"])
+                face[texturefile_layer].image = image
                 face.smooth = True
                 face.normal_flip()
 
