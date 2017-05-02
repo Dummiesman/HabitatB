@@ -9,7 +9,7 @@
 
 
 bl_info = {
-    "name": "HabitiatB - Re-Volt File Formats",
+    "name": "HabitatB - Re-Volt File Formats",
     "author": "Dummiesman, Yethiel",
     "version": (0, 0, 1),
     "blender": (2, 78, 0),
