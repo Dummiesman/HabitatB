@@ -182,7 +182,10 @@ def load_texture(filepath):
     parampath = os.sep.join([path, "parameters.txt"])
     if os.path.exists(parampath):
         params = parameters.read_parameters(parampath)
-        img = params["tpage"].split("\\")[-1]
+        if '/' in params["tpage"]: 
+            img = params["tpage"].split("/")[-1]
+        elif '\\' in params["tpage"]:
+            img = params["tpage"].split("\\")[-1]
         texture_path = os.sep.join([path, img])
         return bpy.data.images.load(texture_path)
     else:
