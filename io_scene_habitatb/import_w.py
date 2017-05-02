@@ -55,7 +55,7 @@ def load_w_file(file, matrix):
         va_layer = bm.loops.layers.color.new("alpha")
         flag_layer = bm.faces.layers.int.new("flags")
         texture_layer = bm.faces.layers.int.new("texture")
-        texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("texfile")
+        texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("uv")
 
         # read bound ball
         bound_ball_center = struct.unpack("<3f", file.read(12))
@@ -148,6 +148,7 @@ def load_w_file(file, matrix):
                     texture_path = os.sep.join([*path[:-1], texture_name])
                     if os.path.exists(texture_path):
                         image = bpy.data.images.load(texture_path)
+                        image.use_fake_user = True
                     else:
                         print("Texture not found: ", texture_path, "Number", poly["texture"])
                 face[texturefile_layer].image = image

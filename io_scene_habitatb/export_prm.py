@@ -29,6 +29,8 @@ def save_prm_file(file, ob, matrix):
     bm = bmesh.new()
     bm.from_mesh(mesh)
 
+    bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+
     # write amount of polygons and vertices
     poly_count = len(bm.faces)
     vertex_count = len(bm.verts)

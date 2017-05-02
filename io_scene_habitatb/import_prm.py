@@ -40,7 +40,7 @@ def load_prm_file(file, matrix, texfile):
     va_layer = bm.loops.layers.color.new("alpha")
     flag_layer = bm.faces.layers.int.new("flags")
     texture_layer = bm.faces.layers.int.new("texture")
-    texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("texfile")
+    texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("uv")
     
     scn.objects.link(ob)
     scn.objects.active = ob
@@ -187,7 +187,9 @@ def load_texture(filepath):
         elif '\\' in params["tpage"]:
             img = params["tpage"].split("\\")[-1]
         texture_path = os.sep.join([path, img])
-        return bpy.data.images.load(texture_path)
+        image = bpy.data.images.load(texture_path)
+        image.use_fake_user = True
+        return image
     else:
         return None
 

@@ -49,15 +49,10 @@ def save_w_file(file, matrix):
         r = max([helpers.get_distance(Vector(v.co) * matrix, c) for v in bm.verts])
         file.write(struct.pack("ffff", c[0], c[1], c[2], r))
 
-        p1 = Vector([min([v.co.x for v in bm.verts]), min([v.co.y for v in bm.verts]), min([v.co.z for v in bm.verts])]) * matrix
-        p2 = Vector([max([v.co.x for v in bm.verts]), max([v.co.y for v in bm.verts]), max([v.co.z for v in bm.verts])]) * matrix
-
-        # # write bound balls
-        # file.write(struct.pack("<3f", 0,0,0))
-        # file.write(struct.pack("<f", 0.0))
-
-        # write bbox
-        file.write(struct.pack("<6f", p1[0], p1[1], p2[2], p2[0], p2[1], p2[2]))
+        # write bounding box
+        mins = Vector([min([v.co.x for v in bm.verts]), min([v.co.y for v in bm.verts]), min([v.co.z for v in bm.verts])]) * matrix
+        maxs = Vector([max([v.co.x for v in bm.verts]), max([v.co.y for v in bm.verts]), max([v.co.z for v in bm.verts])]) * matrix
+        file.write(struct.pack("<6f", mins[0], maxs[0], mins[1], maxs[1], mins[2], maxs[2]))
 
         # write amount of polygons and vertices
         poly_count = len(bm.faces)
@@ -137,9 +132,9 @@ def save_w_file(file, matrix):
         bm.free()
 
     # write a bounding box surrounding the whole level
-    p1 = Vector([min([v.co.x for v in big_mesh.verts]), min([v.co.y for v in big_mesh.verts]), min([v.co.z for v in big_mesh.verts])]) * matrix
-    p2 = Vector([max([v.co.x for v in big_mesh.verts]), max([v.co.y for v in big_mesh.verts]), max([v.co.z for v in big_mesh.verts])]) * matrix
-    file.write(struct.pack("<lffff", 1, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2, helpers.get_distance(p1, p2) / 2))
+    mins = Vector([min([v.co.x for v in big_mesh.verts]), min([v.co.y for v in big_mesh.verts]), min([v.co.z for v in big_mesh.verts])]) * matrix
+    maxs = Vector([max([v.co.x for v in big_mesh.verts]), max([v.co.y for v in big_mesh.verts]), max([v.co.z for v in big_mesh.verts])]) * matrix
+    file.write(struct.pack("<lffff", 1, (mins.x + maxs.x) / 2, (mins.y + maxs.y) / 2, (mins.z + maxs.z) / 2, helpers.get_distance(mins, maxs) / 2))
     file.write(struct.pack("<l", len(export_objs)))
     for i in range(len(export_objs)):
         file.write(struct.pack("<l", i))
