@@ -29,7 +29,7 @@ def save_prm_file(file, ob, matrix):
     bm = bmesh.new()
     bm.from_mesh(mesh)
 
-    bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+    # bpy.ops.object.mode_set(mode='EDIT', toggle=False)
 
     # write amount of polygons and vertices
     poly_count = len(bm.faces)
@@ -40,9 +40,9 @@ def save_prm_file(file, ob, matrix):
     uv_layer = bm.loops.layers.uv.active
     vc_layer = bm.loops.layers.color.get("color")
     va_layer = bm.loops.layers.color.get("alpha")
-    flag_layer = bm.faces.layers.int.get("flags")
-    texture_layer = bm.faces.layers.int.get("texture")
-    texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("texfile")
+    flag_layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
+    texture_layer = bm.faces.layers.int.get("texture") or bm.faces.layers.int.new("texture")
+    texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("uv")
 
 
     # go through all polygons

@@ -47,14 +47,14 @@ def load_w_file(file, matrix):
         scn.objects.link(ob)
         scn.objects.active = ob
 
-        bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+        # bpy.ops.object.mode_set(mode='EDIT', toggle=False)
 
         # create layers and set names
         uv_layer = bm.loops.layers.uv.new("uv")    
         vc_layer = bm.loops.layers.color.new("color")
         va_layer = bm.loops.layers.color.new("alpha")
-        flag_layer = bm.faces.layers.int.new("flags")
-        texture_layer = bm.faces.layers.int.new("texture")
+        flag_layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
+        texture_layer = bm.faces.layers.int.get("texture") or bm.faces.layers.int.new("texture")
         texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("uv")
 
         # read bound ball

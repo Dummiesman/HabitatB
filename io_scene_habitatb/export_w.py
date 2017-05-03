@@ -25,7 +25,7 @@ def save_w_file(file, matrix):
 
     export_objs = []
     for obj in scn.objects:
-        if obj.revolt.rv_type == "WORLD":
+        if obj.revolt.rv_type == "WORLD" or obj.revolt.export_as_w == True:
             export_objs.append(obj)
 
     # write the amount of meshes
@@ -33,6 +33,9 @@ def save_w_file(file, matrix):
 
     # big mesh for writing the big ball
     big_mesh = bmesh.new()
+
+    if not export_objs:
+        return
     
     for ob in export_objs:
         # get mesh name
