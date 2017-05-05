@@ -191,6 +191,14 @@ class RevoltToolPanel(bpy.types.Panel):
         obj = context.object
         self.layout.label(text="Type: "+obj.revolt.rv_type)
         
+        if context.mode == "OBJECT":
+            row = self.layout.row()
+            self.layout.label(text="Set all selected objects to...")
+            row = self.layout.row()
+            row.operator("objtype.setw", text="World")
+            row.operator("objtype.setprm", text="PRM")
+            row.operator("objtype.setncp", text="NCP")
+        
         if context.mode == "EDIT_MESH":
             mesh = obj.data
             bm = bmesh.from_edit_mesh(mesh)
@@ -207,8 +215,32 @@ class RevoltToolPanel(bpy.types.Panel):
                 row.operator("alphacolor.create_layer", icon='PLUS')
 
 
+
 # BUTTONS
+
+class ButtonSetAllW(bpy.types.Operator):
+    bl_idname = "objtype.setw"
+    bl_label = "Set all selected objects to World."
  
+    def execute(self, context):
+        set_all_w(context)
+        return{'FINISHED'} 
+
+class ButtonSetAllPRM(bpy.types.Operator):
+    bl_idname = "objtype.setprm"
+    bl_label = "Set all selected objects to World."
+ 
+    def execute(self, context):
+        set_all_prm(context)
+        return{'FINISHED'} 
+
+class ButtonSetAllNCP(bpy.types.Operator):
+    bl_idname = "objtype.setncp"
+    bl_label = "Set all selected objects to World."
+ 
+    def execute(self, context):
+        set_all_ncp(context)
+        return{'FINISHED'} 
 
 class ButtonVertexColorSet(bpy.types.Operator):
     bl_idname = "vertexcolor.set"
@@ -249,6 +281,18 @@ def set_vertex_color(context, number):
                 loop[colors] = mathutils.Color((number/100, number/100, number/100))
                 
         bmesh.update_edit_mesh(context.object.data)
+
+def set_all_w(context):
+    for obj in bpy.context.selected_objects:
+        obj.revolt.rv_type = "WORLD"
+def set_all_prm(context):
+    for obj in bpy.context.selected_objects:
+        obj.revolt.rv_type = "MESH"
+def set_all_ncp(context):
+    for obj in bpy.context.selected_objects:
+        obj.revolt.rv_type = "NCP"
+
+
 
 def create_color_layer(context):
     obj = context.object
