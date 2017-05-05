@@ -189,7 +189,7 @@ class RevoltToolPanel(bpy.types.Panel):
     bl_category = "Re-Volt"
     def draw(self, context):
         obj = context.object
-        self.layout.label(text="Type: "+obj.revolt.rv_type)
+        self.layout.label(text="Type (active object): "+obj.revolt.rv_type)
         
         if context.mode == "OBJECT":
             row = self.layout.row()

@@ -12,7 +12,7 @@ import time, struct, math
 import os.path as path
 
 import bpy, bmesh, mathutils
-from mathutils import Color, Vector
+from mathutils import Color, Vector, Matrix
 from . import helpers, const
 
 
@@ -44,9 +44,14 @@ def save_w_file(file, matrix):
         # create bmesh
         bm = bmesh.new()
         bm.from_mesh(mesh)
+        tempmesh = bpy.data.meshes.new("temp") # create a temporary mesh
+        
+        # transform object
+        bmesh.ops.transform(bm, matrix=Matrix.Translation(ob.location), space=ob.matrix_world, verts=bm.verts)
 
         # add to big mesh
-        big_mesh.from_mesh(mesh)
+        bm.to_mesh(tempmesh) # save temp bmesh into mesh
+        big_mesh.from_mesh(tempmesh)
 
         c = Vector(ob.location) * matrix
         r = max([helpers.get_distance(Vector(v.co) * matrix, c) for v in bm.verts])
@@ -126,7 +131,7 @@ def save_w_file(file, matrix):
 
         # export vertex positions and normals
         for vertex in bm.verts:
-            coord = Vector((vertex.co[0] + ob.location.x, vertex.co[1] + ob.location.y, vertex.co[2] + ob.location.z)) * matrix
+            coord = Vector((vertex.co[0], vertex.co[1], vertex.co[2])) * matrix
             normal = Vector((vertex.normal[0], vertex.normal[1], vertex.normal[2])) * matrix
             file.write(struct.pack("<fff", *coord))
             file.write(struct.pack("<fff", *normal))
