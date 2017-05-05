@@ -193,12 +193,25 @@ class RevoltToolPanel(bpy.types.Panel):
         
         if context.mode == "OBJECT":
             row = self.layout.row()
-            self.layout.label(text="Set all selected objects to...")
+            # self.layout.prop(context.object.revolt, "rv_type")
+            # unlike props for faces, this would only set the type the selected/active object
+            # that's why we need the operator functions
+            self.layout.label(text="Set for all selected objects...")
+            self.layout.label(text="Object type:")
             row = self.layout.row()
             row.operator("objtype.setw", text="World")
             row.operator("objtype.setprm", text="PRM")
             row.operator("objtype.setncp", text="NCP")
-        
+            
+            # Batch buttons for setting additional export types
+            self.layout.label(text="Additional export:")
+            row = self.layout.row()
+            row.operator("objtype.setalladdw", text="World", icon="RADIOBUT_ON")
+            row.operator("objtype.unsetalladdw", text="Not World", icon="RADIOBUT_OFF")
+            row = self.layout.row()
+            row.operator("objtype.setalladdncp", text="NCP", icon="RADIOBUT_ON")
+            row.operator("objtype.unsetalladdncp", text="Not NCP", icon="RADIOBUT_OFF")
+
         if context.mode == "EDIT_MESH":
             mesh = obj.data
             bm = bmesh.from_edit_mesh(mesh)
@@ -218,6 +231,7 @@ class RevoltToolPanel(bpy.types.Panel):
 
 # BUTTONS
 
+# SET OBJECT TYPE
 class ButtonSetAllW(bpy.types.Operator):
     bl_idname = "objtype.setw"
     bl_label = "Set all selected objects to World."
@@ -228,7 +242,7 @@ class ButtonSetAllW(bpy.types.Operator):
 
 class ButtonSetAllPRM(bpy.types.Operator):
     bl_idname = "objtype.setprm"
-    bl_label = "Set all selected objects to World."
+    bl_label = "Set all selected objects to PRM."
  
     def execute(self, context):
         set_all_prm(context)
@@ -236,11 +250,49 @@ class ButtonSetAllPRM(bpy.types.Operator):
 
 class ButtonSetAllNCP(bpy.types.Operator):
     bl_idname = "objtype.setncp"
-    bl_label = "Set all selected objects to World."
+    bl_label = "Set all selected objects to NCP."
  
     def execute(self, context):
         set_all_ncp(context)
         return{'FINISHED'} 
+
+# ADDITIONAL OBJECT TYPE
+
+class ButtonSetAllAddW(bpy.types.Operator):
+    bl_idname = "objtype.setalladdw"
+    bl_label = "Set Additional export to selected objects."
+ 
+    def execute(self, context):
+        set_all_add_w(context)
+        return{'FINISHED'} 
+
+class ButtonSetAllAddNCP(bpy.types.Operator):
+    bl_idname = "objtype.setalladdncp"
+    bl_label = "Set Additional export to selected objects."
+ 
+    def execute(self, context):
+        set_all_add_ncp(context)
+        return{'FINISHED'} 
+
+# uset
+
+class ButtonUnsetAllAddW(bpy.types.Operator):
+    bl_idname = "objtype.unsetalladdw"
+    bl_label = "Unset Additional export to selected objects."
+ 
+    def execute(self, context):
+        unset_all_add_w(context)
+        return{'FINISHED'} 
+
+class ButtonUnsetAllAddNCP(bpy.types.Operator):
+    bl_idname = "objtype.unsetalladdncp"
+    bl_label = "Unset Additional export to selected objects."
+ 
+    def execute(self, context):
+        unset_all_add_ncp(context)
+        return{'FINISHED'} 
+
+# VERTEX COLORS
 
 class ButtonVertexColorSet(bpy.types.Operator):
     bl_idname = "vertexcolor.set"
@@ -292,6 +344,19 @@ def set_all_ncp(context):
     for obj in bpy.context.selected_objects:
         obj.revolt.rv_type = "NCP"
 
+def set_all_add_w(context):
+    for obj in bpy.context.selected_objects:
+        obj.revolt.export_as_w = True
+def set_all_add_ncp(context):
+    for obj in bpy.context.selected_objects:
+        obj.revolt.export_as_ncp = True
+
+def unset_all_add_w(context):
+    for obj in bpy.context.selected_objects:
+        obj.revolt.export_as_w = False
+def unset_all_add_ncp(context):
+    for obj in bpy.context.selected_objects:
+        obj.revolt.export_as_ncp = False
 
 
 def create_color_layer(context):

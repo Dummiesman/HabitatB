@@ -73,7 +73,6 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
     flag3_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 8), set = lambda s,v: helpers.set_flag_long(s, v, 8))
     flag4_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 12), set = lambda s,v: helpers.set_flag_long(s, v, 12))
     # these flags can be set for objects other than the mentioned type (export .w to ncp, export prm as part of .w)
-    export_as_prm = BoolProperty(name = "Additionally export as Mesh (.prm)")
     export_as_ncp = BoolProperty(name = "Additionally export as NCP (.ncp)")
     export_as_w = BoolProperty(name = "Additionally export as World (.w)")
     use_tex_num = BoolProperty(name = "Keep texture number from mesh.")
