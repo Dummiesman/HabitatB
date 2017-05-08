@@ -12,6 +12,7 @@ import time, struct, math
 import os.path as path
 from math import sqrt, pow, ceil, floor, pi
 import bpy, bmesh, mathutils
+from mathutils import Matrix
 from . import helpers, const
 
 
@@ -22,12 +23,24 @@ from . import helpers, const
 
 def save_ncp_file(file, ob, matrix):
     scn = bpy.context.scene
-    
-    # get mesh
-    mesh = ob.data
 
-    bm = bmesh.new()
-    bm.from_mesh(mesh or bpy.context.object.data)
+    bm = bmesh.new() # big mesh for all ncp objects
+
+    # merge all objects into one mesh
+    for obj in scn.objects:
+        if obj.data and (obj.revolt.rv_type == "NCP" or obj.revolt.export_as_ncp == True):
+            tempmesh = bpy.data.meshes.new("temp") # create a temporary mesh
+            bmtemp = bmesh.new() # temporary mesh to add to the bm
+            bmtemp.from_mesh(obj.data) # fill temp mesh with object data
+            
+            # apply scale, position and rotation
+            bmesh.ops.scale(bm, vec=ob.scale, space=ob.matrix_basis, verts=bm.verts)
+            bmesh.ops.transform(bm, matrix=Matrix.Translation(ob.location), space=ob.matrix_world, verts=bm.verts)
+            bmesh.ops.rotate(bm, cent=ob.location, matrix=ob.rotation_euler.to_matrix(), space=ob.matrix_world, verts=bm.verts)
+            
+            bmtemp.to_mesh(tempmesh) # save temp bmesh into mesh
+            bmtemp.free()
+            bm.from_mesh(tempmesh) # add temp mesh to the big mesh
 
     file.write(struct.pack("<h", len(bm.faces)))
     material_layer = bm.faces.layers.int.get("revolt_material") or bm.faces.layers.int.new("revolt_material")

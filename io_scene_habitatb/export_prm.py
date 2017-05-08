@@ -12,7 +12,7 @@ import time, struct, math
 import os.path as path
 
 import bpy, bmesh
-from mathutils import Color, Vector
+from mathutils import Color, Vector, Matrix
 from . import helpers, const
 
 ######################################################
@@ -28,6 +28,10 @@ def save_prm_file(file, ob, matrix):
     # create bmesh
     bm = bmesh.new()
     bm.from_mesh(mesh)
+
+    # transform
+    bmesh.ops.scale(bm, vec=ob.scale, space=ob.matrix_basis, verts=bm.verts)
+        
 
     # bpy.ops.object.mode_set(mode='EDIT', toggle=False)
 
@@ -64,7 +68,7 @@ def save_prm_file(file, ob, matrix):
         # write the flags
         file.write(struct.pack("<H", face[flag_layer]))
 
-        # write the textureC
+        # write the texture
         if face[texturefile_layer].image and not ob.revolt.use_tex_num:
             texnum = helpers.texture_to_int(face[texturefile_layer].image.name)
         elif texture_layer:

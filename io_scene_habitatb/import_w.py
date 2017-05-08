@@ -53,9 +53,9 @@ def load_w_file(file, matrix):
         uv_layer = bm.loops.layers.uv.new("uv")    
         vc_layer = bm.loops.layers.color.new("color")
         va_layer = bm.loops.layers.color.new("alpha")
-        flag_layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
-        texture_layer = bm.faces.layers.int.get("texture") or bm.faces.layers.int.new("texture")
-        texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("uv")
+        flag_layer = bm.faces.layers.int.new("flags")
+        texture_layer =  bm.faces.layers.int.new("texture")
+        texturefile_layer = bm.faces.layers.tex.new("uv")
 
         # read bound ball
         bound_ball_center = struct.unpack("<3f", file.read(12))
@@ -69,44 +69,36 @@ def load_w_file(file, matrix):
         polygon_count = struct.unpack("<h", file.read(2))[0]
         vertex_count = struct.unpack("<h", file.read(2))[0]
 
-        polygons = []
-
-        # read polygons
-        for p in range(polygon_count):
-            polygon = {}
-            polygon["type"] = struct.unpack("<h", file.read(2))[0]
-            polygon["texture"] = struct.unpack("<h", file.read(2))[0]
-            polygon["vertex_indices"] = struct.unpack("<4h", file.read(8))
-            polygon["colors"] = struct.unpack("<BBBBBBBBBBBBBBBB", file.read(16))
-            polygon["uv"] = struct.unpack("<8f", file.read(32))
-            polygons.append(polygon)
-
         vertices = []
+
+        # skip polys real quick
+        poly_offset = file.tell()
+        file.seek(60 * polygon_count, 1)
 
         # read vertices
         for v in range(vertex_count):
-            vertex = {}
-            vertex["position"] = struct.unpack("<3f", file.read(12))
-            vertex["normal"] = struct.unpack("<3f", file.read(12))
-            vertices.append(vertex)
-
-        
-        # add it all to the mesh
-        for vert in range(vertex_count):
-            location = vertices[vert]["position"]
-            bm.verts.new(Vector((location[0], location[1], location[2])) * matrix)
+            
+            location = struct.unpack("<3f", file.read(12))
+            normal = struct.unpack("<3f", file.read(12))
+            vert = bm.verts.new(Vector((location[0], location[1], location[2])) * matrix)
+            vert.normal = Vector((normal[0], normal[1], normal[2]))
 
         # ensure lookup table before continuing
         bm.verts.ensure_lookup_table()
 
+        # read polygons
+        end_offset = file.tell()
+        file.seek(poly_offset, 0)
+
         for p in range(polygon_count):
-            poly = polygons[p]
-            indices = poly["vertex_indices"]
-            uvs = poly["uv"]
-            colors = poly["colors"]
+            poly_type = struct.unpack("<h", file.read(2))[0]
+            poly_texture = struct.unpack("<h", file.read(2))[0]
+            indices = struct.unpack("<4h", file.read(8))
+            colors = struct.unpack("<16B", file.read(16))
+            uvs = struct.unpack("<8f", file.read(32))
 
             # check if the poly is quad
-            is_quad = poly["type"] & const.FACE_QUAD
+            is_quad = poly_type & const.FACE_QUAD
             if is_quad and len(set(indices)) == 3:
                 is_quad = False
             num_loops = 4 if is_quad else 3
@@ -139,19 +131,22 @@ def load_w_file(file, matrix):
                   face.loops[loop][va_layer] = Color((color_a, color_a, color_a))
                   
                 # setup face
-                face[flag_layer] = poly["type"]
-                face[texture_layer] = poly["texture"]
+                face[flag_layer] = poly_type
+                face[texture_layer] = poly_texture
 
-                texture_name = path[-2].lower() + chr(97 + poly["texture"]) + ".bmp"
-                image = bpy.data.images.get(texture_name)
-                if not image:
-                    texture_path = os.sep.join([*path[:-1], texture_name])
-                    if os.path.exists(texture_path):
-                        image = bpy.data.images.load(texture_path)
-                        image.use_fake_user = True
-                    else:
-                        print("Texture not found: ", texture_path, "Number", poly["texture"])
-                face[texturefile_layer].image = image
+                # look for an image if applicable
+                if poly_texture >= 0:
+                    texture_name = path[-2].lower() + chr(97 + poly_texture) + ".bmp"
+                    image = bpy.data.images.get(texture_name)
+                    if not image:
+                        texture_path = os.sep.join([*path[:-1], texture_name])
+                        if os.path.exists(texture_path):
+                            image = bpy.data.images.load(texture_path)
+                            image.use_fake_user = True
+                        else:
+                            print("Texture not found: ", texture_path, "Number", poly_texture)
+                    face[texturefile_layer].image = image
+                
                 face.smooth = True
                 face.normal_flip()
 
@@ -169,6 +164,9 @@ def load_w_file(file, matrix):
 
         # set new object type to mesh
         ob.revolt.rv_type = "WORLD"
+
+        # reset file seek
+        file.seek(end_offset, 0)
     
 
       
