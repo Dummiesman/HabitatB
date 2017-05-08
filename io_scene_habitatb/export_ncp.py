@@ -28,12 +28,16 @@ def save_ncp_file(file, ob, matrix):
 
     # merge all objects into one mesh
     for obj in scn.objects:
-        if obj.revolt.rv_type == "NCP" or obj.revolt.export_as_ncp == True:
+        if obj.data and (obj.revolt.rv_type == "NCP" or obj.revolt.export_as_ncp == True):
             tempmesh = bpy.data.meshes.new("temp") # create a temporary mesh
             bmtemp = bmesh.new() # temporary mesh to add to the bm
             bmtemp.from_mesh(obj.data) # fill temp mesh with object data
-            # transform object
-            bmesh.ops.transform(bmtemp, matrix=Matrix.Translation(obj.location), space=obj.matrix_world, verts=bmtemp.verts)
+            
+            # apply scale, position and rotation
+            bmesh.ops.scale(bm, vec=ob.scale, space=ob.matrix_basis, verts=bm.verts)
+            bmesh.ops.transform(bm, matrix=Matrix.Translation(ob.location), space=ob.matrix_world, verts=bm.verts)
+            bmesh.ops.rotate(bm, cent=ob.location, matrix=ob.rotation_euler.to_matrix(), space=ob.matrix_world, verts=bm.verts)
+            
             bmtemp.to_mesh(tempmesh) # save temp bmesh into mesh
             bmtemp.free()
             bm.from_mesh(tempmesh) # add temp mesh to the big mesh

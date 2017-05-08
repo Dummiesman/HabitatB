@@ -39,7 +39,7 @@ from bpy_extras.io_utils import (
         ImportHelper,
         ExportHelper,
         )
-from . import helpers, ui, parameters, const
+from . import io_ops, helpers, ui, parameters, const
 
 from bpy_extras.io_utils import ImportHelper, ExportHelper, axis_conversion
 
@@ -55,11 +55,11 @@ for var in locals_copy:
 class RevoltObjectProperties(bpy.types.PropertyGroup):
     rv_type = EnumProperty(name = "Type", items = (("NONE", "None", "None"), 
                                                 ("MESH", "Mesh (.prm)", "Mesh"), 
-                                                ("OBJECT", "Object (.fob)", "Object"), 
-                                                ("INSTANCE", "Instance (.fin)", "Instance"), 
+                                                #("OBJECT", "Object (.fob)", "Object"), 
+                                                #("INSTANCE", "Instance (.fin)", "Instance"), 
                                                 ("WORLD", "World (.w)", "World"),
                                                 ("NCP", "Collision (.ncp)", "Collision (NCP)"),
-                                                ("HULL", "Hull (.hul)", "Hull"),
+                                                #("HULL", "Hull (.hul)", "Hull"),
                                                 ))
     # this is for setting the object type (mesh, w, ncp, fin, ...)
     object_type = EnumProperty(name = "Object type", items = const.object_types)
@@ -89,186 +89,29 @@ class RevoltMeshProperties(bpy.types.PropertyGroup):
     face_envmapping = BoolProperty(name = "EnvMapping (.W)", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_ENV), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_ENV))
     face_cloth = BoolProperty(name = "Cloth effect (.prm)", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_CLOTH), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_CLOTH))
     face_skip = BoolProperty(name = "Do not export", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_SKIP), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_SKIP))
-    
-
-class ImportPRM(bpy.types.Operator, ImportHelper):
-    """Import from PRM file format (.prm, .m)"""
-    bl_idname = "import_scene.prm"
-    bl_label = 'Import PRM'
-    bl_options = {'UNDO'}
-
-    filename_ext = ".prm"
-    filter_glob = StringProperty(
-            default="*.prm;*.m", 
-            options={'HIDDEN'},
-            )
-
-    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
-    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-
-
-    def execute(self, context):
-        from . import import_prm
-
-        return import_prm.load(
-            self, 
-            self.properties.filepath, 
-            context, 
-            axis_conversion(to_up = self.up_axis, 
-                            to_forward = self.forward_axis).to_4x4() * self.scale)
-
-class ImportW(bpy.types.Operator, ImportHelper):
-    """Import from W file format (.w)"""
-    bl_idname = "import_scene.w"
-    bl_label = 'Import W'
-    bl_options = {'UNDO'}
-
-    filename_ext = ".w"
-    filter_glob = StringProperty(
-            default="*.w", 
-            options={'HIDDEN'},
-            )
-
-    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
-    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-
-    def execute(self, context):
-        from . import import_w
-
-        return import_w.load(
-            self, 
-            self.properties.filepath, 
-            context, 
-            axis_conversion(to_up = self.up_axis, 
-                            to_forward = self.forward_axis).to_4x4() * self.scale)
-
-class ImportNCP(bpy.types.Operator, ImportHelper):
-    """Import from NCP file format (.ncp)"""
-    bl_idname = "import_scene.ncp"
-    bl_label = 'Import NCP'
-    bl_options = {'UNDO'}
-
-    filename_ext = ".ncp"
-    filter_glob = StringProperty(
-            default="*.ncp", 
-            options={'HIDDEN'},
-            )
-
-    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
-    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-    
-    def execute(self, context):
-        from . import import_ncp
-
-        return import_ncp.load(
-            self, 
-            self.properties.filepath, 
-            context, 
-            axis_conversion(to_up = self.up_axis, 
-                            to_forward = self.forward_axis).to_4x4() * self.scale)
-
-
-class ExportPRM(bpy.types.Operator, ExportHelper):
-    """Export to PRM file format (.prm, .m)"""
-    bl_idname = "export_scene.prm"
-    bl_label = 'Export PRM'
-
-    filename_ext = ""
-    filter_glob = StringProperty(
-            default="*.prm;*.m",
-            options={'HIDDEN'},
-            )
-
-    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
-    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-        
-    def execute(self, context):
-        from . import export_prm
-                           
-        return export_prm.save(
-            self, 
-            self.properties.filepath, 
-            context, 
-            axis_conversion(from_up = self.up_axis, 
-                            from_forward = self.forward_axis).to_4x4() * (1 / self.scale))
-
-class ExportW(bpy.types.Operator, ExportHelper):
-    """Export to W file format (.w)"""
-    bl_idname = "export_scene.w"
-    bl_label = 'Export W'
-
-    filename_ext = ""
-    filter_glob = StringProperty(
-            default="*.w",
-            options={'HIDDEN'},
-            )
-
-    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
-    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-        
-    def execute(self, context):
-        from . import export_w
-                           
-        return export_w.save(
-            self, 
-            self.properties.filepath, 
-            context, 
-            axis_conversion(from_up = self.up_axis, 
-                            from_forward = self.forward_axis).to_4x4() * (1 / self.scale))
-
-
-class ExportNCP(bpy.types.Operator, ExportHelper):
-    """Export to PRM file format (.prm, .m)"""
-    bl_idname = "export_scene.ncp"
-    bl_label = 'Export NCP'
-
-    filename_ext = ""
-    filter_glob = StringProperty(
-            default="*.ncp;*.m",
-            options={'HIDDEN'},
-            )
-
-    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
-    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
-        
-    def execute(self, context):
-        from . import export_ncp
-        
-                                    
-        return export_ncp.save(
-            self, 
-            self.properties.filepath, 
-            context, 
-            axis_conversion(from_up = self.up_axis, from_forward = self.forward_axis).to_4x4() * (1 / self.scale))
 
 
 # add menu entries
 # PRM
 def menu_func_export_prm(self, context):
-    self.layout.operator(ExportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
+    self.layout.operator(io_ops.ExportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
 
 def menu_func_import_prm(self, context):
-    self.layout.operator(ImportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
+    self.layout.operator(io_ops.ImportPRM.bl_idname, text="Re-Volt PRM (.prm, .m)")
 
 # NCP
 def menu_func_import_ncp(self, context):
-    self.layout.operator(ImportNCP.bl_idname, text="Re-Volt NCP (.ncp)")
+    self.layout.operator(io_ops.ImportNCP.bl_idname, text="Re-Volt NCP (.ncp)")
 
 def menu_func_export_ncp(self, context):
-    self.layout.operator(ExportNCP.bl_idname, text="Re-Volt NCP (.ncp)")
+    self.layout.operator(io_ops.ExportNCP.bl_idname, text="Re-Volt NCP (.ncp)")
 
 # W
 def menu_func_import_w(self, context):
-    self.layout.operator(ImportW.bl_idname, text="Re-Volt World (.w)")
+    self.layout.operator(io_ops.ImportW.bl_idname, text="Re-Volt World (.w)")
 
 def menu_func_export_w(self, context):
-    self.layout.operator(ExportW.bl_idname, text="Re-Volt World (.w)")
+    self.layout.operator(io_ops.ExportW.bl_idname, text="Re-Volt World (.w)")
 
 def register():
     bpy.utils.register_module(__name__)

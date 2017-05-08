@@ -46,8 +46,10 @@ def save_w_file(file, matrix):
         bm.from_mesh(mesh)
         tempmesh = bpy.data.meshes.new("temp") # create a temporary mesh
         
-        # transform object
+        # apply location, rotation and scale to object
+        bmesh.ops.scale(bm, vec=ob.scale, space=ob.matrix_basis, verts=bm.verts)
         bmesh.ops.transform(bm, matrix=Matrix.Translation(ob.location), space=ob.matrix_world, verts=bm.verts)
+        bmesh.ops.rotate(bm, cent=ob.location, matrix=ob.rotation_euler.to_matrix(), space=ob.matrix_world, verts=bm.verts)
 
         # add to big mesh
         bm.to_mesh(tempmesh) # save temp bmesh into mesh
