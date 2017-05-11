@@ -101,6 +101,32 @@ class ImportNCP(bpy.types.Operator, ImportHelper):
             axis_conversion(to_up = self.up_axis, 
                             to_forward = self.forward_axis).to_4x4() * self.scale)
 
+class ImportPOS(bpy.types.Operator, ImportHelper):
+    """Import from POS file format (.pan)"""
+    bl_idname = "import_scene.pan"
+    bl_label = 'Import POS'
+    bl_options = {'UNDO'}
+
+    filename_ext = ".pan"
+    filter_glob = StringProperty(
+            default="*.pan", 
+            options={'HIDDEN'},
+            )
+
+    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
+    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    
+    def execute(self, context):
+        from . import import_pos
+
+        return import_pos.load(
+            self, 
+            self.properties.filepath, 
+            context, 
+            axis_conversion(to_up = self.up_axis, 
+                            to_forward = self.forward_axis).to_4x4() * self.scale)
+
 
 class ExportPRM(bpy.types.Operator, ExportHelper):
     """Export to PRM file format (.prm, .m)"""
@@ -154,7 +180,7 @@ class ExportW(bpy.types.Operator, ExportHelper):
 
 
 class ExportNCP(bpy.types.Operator, ExportHelper):
-    """Export to PRM file format (.prm, .m)"""
+    """Export to NCP file format (.ncp)"""
     bl_idname = "export_scene.ncp"
     bl_label = 'Export NCP'
 
