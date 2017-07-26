@@ -21,7 +21,7 @@ from . import helpers, const
 
 def save_prm_file(file, ob, matrix):
     scn = bpy.context.scene
-    
+
     # get mesh name
     mesh = ob.data
 
@@ -31,7 +31,7 @@ def save_prm_file(file, ob, matrix):
 
     # transform
     bmesh.ops.scale(bm, vec=ob.scale, space=ob.matrix_basis, verts=bm.verts)
-        
+
 
     # bpy.ops.object.mode_set(mode='EDIT', toggle=False)
 
@@ -51,22 +51,17 @@ def save_prm_file(file, ob, matrix):
 
     # go through all polygons
     for face in bm.faces:
-        # get flags 
+        # get flags
         # figure out whether the face is quad
         is_quad = len(face.verts) > 3
-      
-      # get the flag layer (bit field)
-      # if flag_layer:
-      #   flags_int = helpers.vc_to_bitfield(face.loops[0][flag_layer])
-      # else:
-      #   flags_int = 0 # if no flag layer is present, don't set any flags
 
         # set the quad-flag if the poly is quadratic
         if is_quad:
-            face[texture_layer] |= const.FACE_QUAD
+            face[flag_layer] |= const.FACE_QUAD
 
         # write the flags
-        file.write(struct.pack("<H", face[flag_layer]))
+        flags = face[flag_layer] if flag_layer else 0
+        file.write(struct.pack("<H", flags))
 
         # write the texture
         if face[texturefile_layer].image and not ob.revolt.use_tex_num:
@@ -80,7 +75,7 @@ def save_prm_file(file, ob, matrix):
 
         # get vertex order
         vert_order = [2, 1, 0, 3] if not is_quad else [3, 2, 1, 0]
-      
+
         # write indices
         for i in vert_order:
             if i < len(face.verts):
@@ -91,7 +86,7 @@ def save_prm_file(file, ob, matrix):
         # write the vertex colors
         for i in vert_order:
             if i < len(face.verts):
-              # get color from the channel or fall back to a default valueCA
+                # get color from the channel or fall back to a default valueCA
                 color = face.loops[i][vc_layer] if vc_layer else Color((1, 1, 1))
                 alpha = face.loops[i][va_layer] if va_layer else Color((1, 1, 1))
                 file.write(struct.pack("<BBBB", int(color.b * 255), int(color.g * 255), int(color.r * 255), int((alpha.v) * 255)))
@@ -108,10 +103,10 @@ def save_prm_file(file, ob, matrix):
 
     # export vertex positions and normals
     for vertex in bm.verts:
-      coord = Vector((vertex.co[0], vertex.co[1], vertex.co[2])) * matrix
-      normal = Vector((vertex.normal[0], vertex.normal[1], vertex.normal[2])) * matrix
-      file.write(struct.pack("<fff", *coord))
-      file.write(struct.pack("<fff", *normal))
+        coord = Vector((vertex.co[0], vertex.co[1], vertex.co[2])) * matrix
+        normal = Vector((vertex.normal[0], vertex.normal[1], vertex.normal[2])) * matrix
+        file.write(struct.pack("<fff", *coord))
+        file.write(struct.pack("<fff", *normal))
 
     # free the bmesh
     bm.free()
@@ -122,7 +117,7 @@ def save_prm_file(file, ob, matrix):
 # EXPORT
 ######################################################
 def save_prm(filepath, context, matrix):
-             
+
     time1 = time.clock()
 
     ob = bpy.context.active_object
@@ -132,13 +127,13 @@ def save_prm(filepath, context, matrix):
     file = open(filepath, 'wb')
     save_prm_file(file, ob, matrix)
     file.close()
-     
+
     # prm export complete
     print(" done in %.4f sec." % (time.clock() - time1))
 
 
 def save(operator, filepath, context, matrix):
-    
+
     # save PRM file
     save_prm(filepath, context, matrix)
 

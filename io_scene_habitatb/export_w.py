@@ -36,7 +36,7 @@ def save_w_file(file, matrix):
 
     if not export_objs:
         return
-    
+
     for ob in export_objs:
         # get mesh name
         mesh = ob.data
@@ -45,7 +45,7 @@ def save_w_file(file, matrix):
         bm = bmesh.new()
         bm.from_mesh(mesh)
         tempmesh = bpy.data.meshes.new("temp") # create a temporary mesh
-        
+
         # apply location, rotation and scale to object
         bmesh.ops.scale(bm, vec=ob.scale, space=ob.matrix_basis, verts=bm.verts)
         bmesh.ops.transform(bm, matrix=Matrix.Translation(ob.location), space=ob.matrix_world, verts=bm.verts)
@@ -80,11 +80,10 @@ def save_w_file(file, matrix):
 
         # go through all polygons
         for face in bm.faces:
-            # get flags 
+            # get flags
             # figure out whether the face is quad
             is_quad = len(face.verts) > 3
         
-
             # set the quad-flag if the poly is quadratic
             if is_quad:
                 face[flag_layer] |= const.FACE_QUAD
@@ -100,7 +99,7 @@ def save_w_file(file, matrix):
                 texnum = face[texture_layer]
             else:
                 texnum = -1
-            
+
             file.write(struct.pack("<h", texnum))
 
             # get vertex order
@@ -148,7 +147,7 @@ def save_w_file(file, matrix):
     file.write(struct.pack("<l", len(export_objs)))
     for i in range(len(export_objs)):
         file.write(struct.pack("<l", i))
-    
+
     # no texture animations today
     file.write(struct.pack("<l", 0))
 
@@ -159,7 +158,7 @@ def save_w_file(file, matrix):
 # EXPORT
 ######################################################
 def save_w(filepath, context, matrix):
-             
+
     time1 = time.clock()
 
     # print("exporting W: {} as {}...".format(str(ob), filepath))
@@ -168,13 +167,13 @@ def save_w(filepath, context, matrix):
     file = open(filepath, 'wb')
     save_w_file(file, matrix)
     file.close()
-     
+
     # prm export complete
     print(" done in %.4f sec." % (time.clock() - time1))
 
 
 def save(operator, filepath, context, matrix):
-    
+
     # save PRM file
     save_w(filepath, context, matrix)
 
