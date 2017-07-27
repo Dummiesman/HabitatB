@@ -22,10 +22,10 @@ from bpy.props import (
         )
 
 flag_names = ["Double-Sided", "Transparent", "Alpha or Additive", "No EnvMap", "EnvMap"]
-flag_descr = ["Set to make the polygon visible from both sides.", 
-            "Set to enable transparency for this polygon. Re-Volt will then apply transparency from the texture and the alpha vertex color channel.", 
+flag_descr = ["Set to make the polygon visible from both sides.",
+            "Set to enable transparency for this polygon. Re-Volt will then apply transparency from the texture and the alpha vertex color channel.",
             "Set to make Re-Volt render this polygon with alpha transparency from the texture or use additive blending (dark colors become transparent, brighter colors lighten/glow).",
-            "Set to disable the environment map (don't make the polygon shiny, e.g. for the underside of cars)." 
+            "Set to disable the environment map (don't make the polygon shiny, e.g. for the underside of cars)."
             "Set to enable the environment map (make the polygon shiny)."]
 
 
@@ -45,7 +45,7 @@ class RevoltTypePanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
-    
+
     def draw(self, context):
         self.layout.prop(context.object.revolt, "rv_type")
         rvtype = context.object.revolt.rv_type
@@ -59,7 +59,7 @@ class RevoltTypePanel(bpy.types.Panel):
         # self.layout.prop(context.object.revolt, "export_as_prm") makes no sense to have
         if rvtype in ["OBJECT", "WORLD", "MESH", "NONE", "INSTANCE", "NCP"]:
             self.layout.prop(context.object.revolt, "export_as_w")
-        
+
         if rvtype in ["OBJECT", "WORLD", "MESH", "NONE", "INSTANCE"]:
             self.layout.prop(context.object.revolt, "export_as_ncp")
             self.layout.prop(context.object.revolt, "use_tex_num")
@@ -72,27 +72,27 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
     bl_region_type = "TOOLS"
     bl_context = "mesh_edit"
     bl_category = "Re-Volt"
-    
+
     selection = None
     selected_face_count = None
 
     # @classmethod
     # def poll(self, context):
     #     return context.object.type == "MESH"
-    
+
     def draw(self, context):
         obj = context.object
         mesh = obj.data
         bm = bmesh.from_edit_mesh(mesh)
-        flags = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
-        texture = bm.faces.layers.int.get("texture") or bm.faces.layers.int.new("texture")
+        flags = bm.faces.layers.int.get("Flags") or bm.faces.layers.int.new("Flags")
+        texture = bm.faces.layers.int.get("Texture") or bm.faces.layers.int.new("Texture")
         if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
             self.selected_face_count = mesh.total_face_sel
             self.selection = [face for face in bm.faces if face.select]
-        
+
         # count the number of faces the flags are set for
         count = [0] * len(const.FACE_PROPS)
-        # if len(self.selection) > 1:            
+        # if len(self.selection) > 1:
         for face in self.selection:
             for x in range(len(const.FACE_PROPS)):
                 if face[flags] & const.FACE_PROPS[x]:
@@ -104,7 +104,7 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
             self.layout.prop(context.object.data.revolt, "face_material", text="Material".format(""))
         if rvtype in ["MESH", "WORLD", "OBJECT", "INSTANCE"]:
             row  = self.layout.row()
-            col = row.column(align = True)    
+            col = row.column(align = True)
             col.prop(context.object.data.revolt, "face_double_sided", text="{}: Double sided".format(count[1]))
             col.prop(context.object.data.revolt, "face_translucent", text="{}: Translucent".format(count[2]))
             col.prop(context.object.data.revolt, "face_mirror", text="{}: Mirror".format(count[3]))
@@ -126,7 +126,7 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
             col.operator("faceprops.select", text="sel").prop = const.FACE_CLOTH
             col.operator("faceprops.select", text="sel").prop = const.FACE_SKIP
 
-            
+
             if len(self.selection) > 1:
                 self.layout.prop(context.object.data.revolt, "face_texture", text="Texture (multiple)")
                 self.layout.label(text="(Texture will be applied to all selected faces.)")
@@ -157,13 +157,13 @@ class RevoltVertexPanel(bpy.types.Panel):
         else:
             mesh = obj.data
             bm = bmesh.from_edit_mesh(mesh)
-            vc_layer = bm.loops.layers.color.get("color")
-           
+            vc_layer = bm.loops.layers.color.get("Col")
+
             # update selection data
             if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
                 self.selected_face_count = mesh.total_face_sel
                 self.selection = [face for face in bm.faces if face.select]
-        
+
             if vc_layer is None:
                 row = self.layout.row()
                 row.label(text="Please create a vertex color layer.", icon='INFO')
@@ -223,56 +223,56 @@ class RevoltToolPanel(bpy.types.Panel):
         row.operator(io_ops.ImportNCP.bl_idname, text="NCP")
         row = self.layout.row(align=True)
         row.label(text="Export")
-        
-        if bpy.context.active_object: 
+
+        if bpy.context.active_object:
             row.operator(io_ops.ExportPRM.bl_idname, text="PRM")
         else:
             row.operator(io_ops.ExportPRM.bl_idname, text="PRM", icon="X")
-            
-        if "WORLD" in types: 
+
+        if "WORLD" in types:
             row.operator(io_ops.ExportW.bl_idname, text="W")
         else:
             row.operator(io_ops.ExportW.bl_idname, text="W", icon="X")
-        
+
         if "NCP" in types:
             row.operator(io_ops.ExportNCP.bl_idname, text="NCP")
         else:
             row.operator(io_ops.ExportNCP.bl_idname, text="NCP", icon="X")
-        
+
         if context.mode == "OBJECT":
             obj = context.object
             if not obj:
                 return
 
-            self.layout.label(text="Type (active object): "+obj.revolt.rv_type)
-
-
             row = self.layout.row()
-            # self.layout.prop(context.object.revolt, "rv_type")
-            # unlike props for faces, this would only set the type the selected/active object
-            # that's why we need the operator functions
+            row.label(text="Type (active object): "+obj.revolt.rv_type)
+
+            # !!! self.layout.prop(context.object.revolt, "rv_type")
+            # !!! IMPORTANT: unlike props for faces, this would only set the type the selected/active object
+            # !!! that's why we need the operator functions!
+
             self.layout.label(text="Object type (for all selected):")
             row = self.layout.row(align=True)
             row.operator("objtype.setw", text="World")
             row.operator("objtype.setprm", text="PRM")
             row.operator("objtype.setncp", text="NCP")
-            
+
             # Batch buttons for setting additional export types
             self.layout.label(text="Additional export (for all selected):")
             row = self.layout.row(align=True)
-            row.operator("objtype.setalladdw", text="World", icon="RADIOBUT_ON")
-            row.operator("objtype.unsetalladdw", text="Not World", icon="RADIOBUT_OFF")
+            row.operator("objtype.setalladdw", text="World")
+            row.operator("objtype.unsetalladdw", text="Not World")
             row = self.layout.row(align=True)
-            row.operator("objtype.setalladdncp", text="NCP", icon="RADIOBUT_ON")
-            row.operator("objtype.unsetalladdncp", text="Not NCP", icon="RADIOBUT_OFF")
+            row.operator("objtype.setalladdncp", text="NCP")
+            row.operator("objtype.unsetalladdncp", text="Not NCP")
 
         if context.mode == "EDIT_MESH":
             mesh = obj.data
             bm = bmesh.from_edit_mesh(mesh)
-            
-            vc_layer = bm.loops.layers.color.get("color")
-            alpha_layer = bm.loops.layers.color.get("alpha")
-            
+
+            vc_layer = bm.loops.layers.color.get("Col")
+            alpha_layer = bm.loops.layers.color.get("Alpha")
+
             if vc_layer is None:
                 row = self.layout.row()
                 row.operator("vertexcolor.create_layer", icon='PLUS')
@@ -287,72 +287,72 @@ class RevoltToolPanel(bpy.types.Panel):
 class ButtonSetAllW(bpy.types.Operator):
     bl_idname = "objtype.setw"
     bl_label = "Set all selected objects to World."
- 
+
     def execute(self, context):
         helpers.set_all_w(context)
-        return{'FINISHED'} 
+        return{'FINISHED'}
 
 class ButtonSetAllPRM(bpy.types.Operator):
     bl_idname = "objtype.setprm"
     bl_label = "Set all selected objects to PRM."
- 
+
     def execute(self, context):
         helpers.set_all_prm(context)
-        return{'FINISHED'} 
+        return{'FINISHED'}
 
 class ButtonSetAllNCP(bpy.types.Operator):
     bl_idname = "objtype.setncp"
     bl_label = "Set all selected objects to NCP."
- 
+
     def execute(self, context):
         helpers.set_all_ncp(context)
-        return{'FINISHED'} 
+        return{'FINISHED'}
 # FACE PROP SELECTORS
 
 class ButtonSelectFaceProp(bpy.types.Operator):
     bl_idname = "faceprops.select"
     bl_label = "sel"
     prop = bpy.props.IntProperty()
- 
+
     def execute(self, context):
         helpers.select_faces(context, self.prop)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 # ADDITIONAL OBJECT TYPE
 
 class ButtonSetAllAddW(bpy.types.Operator):
     bl_idname = "objtype.setalladdw"
     bl_label = "Set Additional export to selected objects."
- 
+
     def execute(self, context):
         helpers.set_all_add_w(context)
-        return{'FINISHED'} 
+        return{'FINISHED'}
 
 class ButtonSetAllAddNCP(bpy.types.Operator):
     bl_idname = "objtype.setalladdncp"
     bl_label = "Set Additional export to selected objects."
- 
+
     def execute(self, context):
         helpers.set_all_add_ncp(context)
-        return{'FINISHED'} 
+        return{'FINISHED'}
 
-# uset
+# unset
 
 class ButtonUnsetAllAddW(bpy.types.Operator):
     bl_idname = "objtype.unsetalladdw"
     bl_label = "Unset Additional export to selected objects."
- 
+
     def execute(self, context):
         helpers.unset_all_add_w(context)
-        return{'FINISHED'} 
+        return{'FINISHED'}
 
 class ButtonUnsetAllAddNCP(bpy.types.Operator):
     bl_idname = "objtype.unsetalladdncp"
     bl_label = "Unset Additional export to selected objects."
- 
+
     def execute(self, context):
         helpers.unset_all_add_ncp(context)
-        return{'FINISHED'} 
+        return{'FINISHED'}
 
 # VERTEX COLORS
 
@@ -360,23 +360,23 @@ class ButtonVertexColorSet(bpy.types.Operator):
     bl_idname = "vertexcolor.set"
     bl_label = "SET COLOR"
     number = bpy.props.IntProperty()
- 
+
     def execute(self, context):
         helpers.set_vertex_color(context, self.number)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 class ButtonVertexColorCreateLayer(bpy.types.Operator):
     bl_idname = "vertexcolor.create_layer"
     bl_label = "Create vertex color layer"
- 
+
     def execute(self, context):
         helpers.create_color_layer(context)
-        return{'FINISHED'} 
+        return{'FINISHED'}
 
 class ButtonVertexColorCreateLayer(bpy.types.Operator):
     bl_idname = "alphacolor.create_layer"
     bl_label = "Create alpha color layer"
- 
+
     def execute(self, context):
         helpers.create_alpha_layer(context)
-        return{'FINISHED'} 
+        return{'FINISHED'}

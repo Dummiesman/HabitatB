@@ -71,10 +71,10 @@ def save_w_file(file, matrix):
 
         # get layers
         uv_layer = bm.loops.layers.uv.active
-        vc_layer = bm.loops.layers.color.get("color")
-        va_layer = bm.loops.layers.color.get("alpha")
-        flag_layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
-        texture_layer = bm.faces.layers.int.get("texture")
+        vc_layer = bm.loops.layers.color.get("Col")
+        va_layer = bm.loops.layers.color.get("Alpha")
+        flag_layer = bm.faces.layers.int.get("Flags") or bm.faces.layers.int.new("Flags")
+        texture_layer = bm.faces.layers.int.get("Texture")
         texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("texfile")
 
 
@@ -83,7 +83,7 @@ def save_w_file(file, matrix):
             # get flags
             # figure out whether the face is quad
             is_quad = len(face.verts) > 3
-        
+
             # set the quad-flag if the poly is quadratic
             if is_quad:
                 face[flag_layer] |= const.FACE_QUAD

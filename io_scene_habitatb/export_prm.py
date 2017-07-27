@@ -42,11 +42,11 @@ def save_prm_file(file, ob, matrix):
 
     # get layers
     uv_layer = bm.loops.layers.uv.active
-    vc_layer = bm.loops.layers.color.get("color")
-    va_layer = bm.loops.layers.color.get("alpha")
-    flag_layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
-    texture_layer = bm.faces.layers.int.get("texture") or bm.faces.layers.int.new("texture")
-    texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("uv")
+    vc_layer = bm.loops.layers.color.get("Col")
+    va_layer = bm.loops.layers.color.get("Alpha")
+    flag_layer = bm.faces.layers.int.get("Flags") or bm.faces.layers.int.new("Flags")
+    texture_layer = bm.faces.layers.int.get("Texture") or bm.faces.layers.int.new("Texture")
+    texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("UVMap")
 
 
     # go through all polygons

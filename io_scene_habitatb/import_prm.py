@@ -11,7 +11,7 @@
 import bpy, struct, bmesh, re, os, glob
 import time, struct
 from mathutils import Vector, Color
- 
+
 from . import const, parameters
 
 export_filename = None
@@ -22,10 +22,10 @@ export_filename = None
 def load_prm_file(file, matrix, texfile):
     path = file.name.split(os.sep)
     scn = bpy.context.scene
-    
+
     # get mesh name
     mesh_name = bpy.path.basename(export_filename)
-    
+
     # add a mesh and link it to the scene
     me = bpy.data.meshes.new(mesh_name)
     ob = bpy.data.objects.new(mesh_name, me)
@@ -35,25 +35,25 @@ def load_prm_file(file, matrix, texfile):
     bm.from_mesh(me)
 
     # create layers and set names
-    uv_layer = bm.loops.layers.uv.new("uv")    
-    vc_layer = bm.loops.layers.color.new("color")
-    va_layer = bm.loops.layers.color.new("alpha")
-    flag_layer = bm.faces.layers.int.new("flags")
-    texture_layer = bm.faces.layers.int.new("texture")
-    texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("uv")
-    
+    uv_layer = bm.loops.layers.uv.new("UVMap")
+    vc_layer = bm.loops.layers.color.new("Col")
+    va_layer = bm.loops.layers.color.new("Alpha")
+    flag_layer = bm.faces.layers.int.new("Flags")
+    texture_layer = bm.faces.layers.int.new("Texture") # the int number of the texture
+    texturefile_layer = bm.faces.layers.tex.active or bm.faces.layers.tex.new("UVMap") # the texture file
+
     scn.objects.link(ob)
     scn.objects.active = ob
-    
+
     bpy.ops.object.mode_set(mode='EDIT', toggle=False)
-    
+
     # read prm header
     poly_count, vertex_count = struct.unpack('<HH', file.read(4))
     poly_offset = file.tell()
-    
+
     # skip polys real quick
     file.seek(60 * poly_count, 1)
-    
+
     # read vertices
     print("reading verts at " + str(file.tell()))
     for vert in range(vertex_count):
@@ -62,10 +62,10 @@ def load_prm_file(file, matrix, texfile):
 
         # create vertices multiplied by rv matrix
         bm.verts.new(Vector((location[0], location[1], location[2])) * matrix)
-    
+
     # ensure lookup table before continuing
     bm.verts.ensure_lookup_table()
-    
+
     # read faces
     file.seek(poly_offset, 0)
     for poly in range(poly_count):
@@ -94,25 +94,25 @@ def load_prm_file(file, matrix, texfile):
             if is_quad:
                 face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]], bm.verts[indices[3]]))
             else:
-                face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]])) 
-              
+                face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]]))
+
             # set layer properties
             for loop in range(num_loops):
                 # set uvs
                 uv = (uvs[loop * 2], 1 - uvs[loop * 2 + 1])
                 face.loops[loop][uv_layer].uv = uv
-              
+
                 # set colors
                 color_idx = loop * 4
                 color_b = float(colors[color_idx]) / 255
                 color_g = float(colors[color_idx + 1]) / 255
                 color_r = float(colors[color_idx + 2]) / 255
                 color_a = 1.0 - (float(colors[color_idx + 3]) / 255)
-              
+
                 # apply colors and alpha to layers
                 face.loops[loop][vc_layer] = Color((color_r, color_g, color_b))
                 face.loops[loop][va_layer] = Color((color_a, color_a, color_a))
-              
+
             # setup face
             face[flag_layer] = flags
             face[texture_layer] = texture
@@ -138,10 +138,10 @@ def load_prm_file(file, matrix, texfile):
             # set existing face as double-sided
             #existing_face = bm.faces.get([bm.verts[i] for i in (indices if is_quad else indices[:3])])
             #existing_face[flag_layer] |= 0x002
-      
+
     # calculate normals
     bm.normal_update()
-    
+
     # free resources
     bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
     bm.to_mesh(me)
@@ -153,9 +153,9 @@ def load_prm_file(file, matrix, texfile):
     # if it's a car, mark it to not use the texture number from level textures
     if texfile:
         ob.revolt.use_tex_num = True
-    
 
-      
+
+
 
 ######################################################
 # IMPORT
@@ -182,7 +182,7 @@ def load_texture(filepath):
     parampath = os.sep.join([path, "parameters.txt"])
     if os.path.exists(parampath):
         params = parameters.read_parameters(parampath)
-        if '/' in params["tpage"]: 
+        if '/' in params["tpage"]:
             img = params["tpage"].split("/")[-1]
         elif '\\' in params["tpage"]:
             img = params["tpage"].split("\\")[-1]
@@ -197,7 +197,7 @@ def load(operator, filepath, context, matrix):
 
     global export_filename
     export_filename = filepath
-    
+
     texture = load_texture(filepath)
 
     load_prm(filepath, context, matrix, texture)

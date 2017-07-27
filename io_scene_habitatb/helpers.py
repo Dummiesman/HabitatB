@@ -49,7 +49,7 @@ def set_face_material(self, value):
 
 def get_face_texture(self):
     bm = bmesh.from_edit_mesh(bpy.context.object.data)
-    layer = bm.faces.layers.int.get("texture") or bm.faces.layers.int.new("texture")
+    layer = bm.faces.layers.int.get("Texture") or bm.faces.layers.int.new("Texture")
     selected_faces = [face for face in bm.faces if face.select]
     if len(selected_faces) == 0 or any([face[layer] != selected_faces[0][layer] for face in selected_faces]):
         return -1
@@ -58,14 +58,14 @@ def get_face_texture(self):
 
 def set_face_texture(self, value):
     bm = bmesh.from_edit_mesh(bpy.context.object.data)
-    layer = bm.faces.layers.int.get("texture") or bm.faces.layers.int.new("texture")
+    layer = bm.faces.layers.int.get("Texture") or bm.faces.layers.int.new("Texture")
     for face in bm.faces:
         if face.select:
             face[layer] = value
 
 def get_face_property(self):
     bm = bmesh.from_edit_mesh(bpy.context.object.data)
-    layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
+    layer = bm.faces.layers.int.get("Flags") or bm.faces.layers.int.new("Flags")
     selected_faces = [face for face in bm.faces if face.select]
     if len(selected_faces) == 0:
         return 0
@@ -75,11 +75,11 @@ def get_face_property(self):
     return output
 
 def is_face_prop(self, face, prop):
-    return face["flags"] & prop
+    return face["Flags"] & prop
 
 def set_face_property(self, value, mask):
     bm = bmesh.from_edit_mesh(bpy.context.object.data)
-    layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
+    layer = bm.faces.layers.int.get("Flags") or bm.faces.layers.int.new("Flags")
     for face in bm.faces:
         if face.select:
             face[layer] = face[layer] | mask if value else face[layer] & ~mask
@@ -125,23 +125,23 @@ def redraw():
 
 def select_faces(context, prop):
     bm = bmesh.from_edit_mesh(context.object.data)
-    flag_layer = bm.faces.layers.int.get("flags") or bm.faces.layers.int.new("flags")
+    flag_layer = bm.faces.layers.int.get("Flags") or bm.faces.layers.int.new("Flags")
 
     for face in bm.faces:
         if face[flag_layer] & prop:
             face.select = not face.select
-    redraw()   
+    redraw()
 
 def set_vertex_color(context, number):
     print(context, number)
-    bm = bmesh.from_edit_mesh(context.object.data)        
+    bm = bmesh.from_edit_mesh(context.object.data)
     verts = [ v for v in bm.verts if v.select ]
     if verts:
-        colors = bm.loops.layers.color.get("color")   
+        colors = bm.loops.layers.color.get("Col")
         for v in verts:
             for loop in v.link_loops:
                 loop[colors] = mathutils.Color((number/100, number/100, number/100))
-                
+
         bmesh.update_edit_mesh(context.object.data)
 
 def set_all_w(context):
@@ -171,9 +171,9 @@ def unset_all_add_ncp(context):
 def create_color_layer(context):
     obj = context.object
     bm = bmesh.from_edit_mesh(obj.data)
-    bm.loops.layers.color.new("color")
+    bm.loops.layers.color.new("Col")
 
 def create_alpha_layer(context):
     obj = context.object
     bm = bmesh.from_edit_mesh(obj.data)
-    bm.loops.layers.color.new("alpha")
+    bm.loops.layers.color.new("Alpha")

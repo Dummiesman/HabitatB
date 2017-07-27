@@ -33,7 +33,7 @@ def load_w_file(file, matrix):
 
         # get mesh name
         mesh_name = bpy.path.basename(export_filename)
-        
+
         # add a mesh and link it to the scene
         me = bpy.data.meshes.new(mesh_name)
         ob = bpy.data.objects.new(mesh_name, me)
@@ -50,12 +50,12 @@ def load_w_file(file, matrix):
         # bpy.ops.object.mode_set(mode='EDIT', toggle=False)
 
         # create layers and set names
-        uv_layer = bm.loops.layers.uv.new("uv")    
-        vc_layer = bm.loops.layers.color.new("color")
-        va_layer = bm.loops.layers.color.new("alpha")
-        flag_layer = bm.faces.layers.int.new("flags")
-        texture_layer =  bm.faces.layers.int.new("texture")
-        texturefile_layer = bm.faces.layers.tex.new("uv")
+        uv_layer = bm.loops.layers.uv.new("UVMap")
+        vc_layer = bm.loops.layers.color.new("Col")
+        va_layer = bm.loops.layers.color.new("Alpha")
+        flag_layer = bm.faces.layers.int.new("Flags")
+        texture_layer =  bm.faces.layers.int.new("Texture")
+        texturefile_layer = bm.faces.layers.tex.new("UVMap")
 
         # read bound ball
         bound_ball_center = struct.unpack("<3f", file.read(12))
@@ -77,7 +77,7 @@ def load_w_file(file, matrix):
 
         # read vertices
         for v in range(vertex_count):
-            
+
             location = struct.unpack("<3f", file.read(12))
             normal = struct.unpack("<3f", file.read(12))
             vert = bm.verts.new(Vector((location[0], location[1], location[2])) * matrix)
@@ -111,8 +111,8 @@ def load_w_file(file, matrix):
                 if is_quad:
                   face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]], bm.verts[indices[3]]))
                 else:
-                  face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]])) 
-                  
+                  face = bm.faces.new((bm.verts[indices[0]], bm.verts[indices[1]], bm.verts[indices[2]]))
+
                 # set layer properties
                 for loop in range(num_loops):
                   # set uvs
@@ -125,11 +125,11 @@ def load_w_file(file, matrix):
                   color_g = float(colors[color_idx + 1]) / 255
                   color_r = float(colors[color_idx + 2]) / 255
                   color_a = 1.0 - (float(colors[color_idx + 3]) / 255)
-                  
+
                   # apply colors and alpha to layers
                   face.loops[loop][vc_layer] = Color((color_r, color_g, color_b))
                   face.loops[loop][va_layer] = Color((color_a, color_a, color_a))
-                  
+
                 # setup face
                 face[flag_layer] = poly_type
                 face[texture_layer] = poly_texture
@@ -146,7 +146,7 @@ def load_w_file(file, matrix):
                         else:
                             print("Texture not found: ", texture_path, "Number", poly_texture)
                     face[texturefile_layer].image = image
-                
+
                 face.smooth = True
                 face.normal_flip()
 
@@ -156,7 +156,7 @@ def load_w_file(file, matrix):
 
         # calculate normals
         bm.normal_update()
-        
+
         # free resources
         bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
         bm.to_mesh(me)
@@ -167,9 +167,9 @@ def load_w_file(file, matrix):
 
         # reset file seek
         file.seek(end_offset, 0)
-    
 
-      
+
+
 
 ######################################################
 # IMPORT
@@ -192,7 +192,7 @@ def load(operator, filepath, context, matrix):
 
     global export_filename
     export_filename = filepath
-    
+
     load_w(filepath, context, matrix)
 
     return {'FINISHED'}

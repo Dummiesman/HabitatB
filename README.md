@@ -1,5 +1,5 @@
 # HabitatB
-A set of Blender tools for Re-Volt. Built for Blender 2.78+
+A Blender add-on for Re-Volt files, made for Blender 2.78+.
 ![logo](http://habitat.re-volt.io/habitat_logo.png)
 
 ## Features
@@ -7,9 +7,11 @@ List of currently supported features:
 + Import and export PRM
 + Import and export NCP
 + Import and export W
++ Import POS (experimental)
 + Editing face properties and vertex colors
 
 ## Links
 + [Download](https://github.com/Dummiesman/HabitatB/archive/master.zip)
-+ [Documentation](https://github.com/Dummiesman/HabitatB/wiki)
++ [Documentation](http://learn.re-volt.io/habitatb-docs/user-interface#import-export)
++ [Tutorial](http://learn.re-volt.io)
 + [Current issues](https://github.com/Dummiesman/HabitatB/issues)
