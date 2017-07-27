@@ -55,14 +55,16 @@ class RevoltTypePanel(bpy.types.Panel):
             self.layout.prop(context.object.revolt, "flag2_long", text="Setting 2")
             self.layout.prop(context.object.revolt, "flag3_long", text="Setting 3")
             self.layout.prop(context.object.revolt, "flag4_long", text="Setting 4")
-        self.layout.label(text="Level Export:")
+        self.layout.label(text="Additionally export as:")
         # self.layout.prop(context.object.revolt, "export_as_prm") makes no sense to have
         if rvtype in ["OBJECT", "WORLD", "MESH", "NONE", "INSTANCE", "NCP"]:
-            self.layout.prop(context.object.revolt, "export_as_w")
+            self.layout.prop(context.object.revolt, "export_as_w", text="W (World)")
 
         if rvtype in ["OBJECT", "WORLD", "MESH", "NONE", "INSTANCE"]:
-            self.layout.prop(context.object.revolt, "export_as_ncp")
-            self.layout.prop(context.object.revolt, "use_tex_num")
+            self.layout.prop(context.object.revolt, "export_as_ncp", text="NPC (Collision)")
+
+        self.layout.label(text="Other Properties:")
+        self.layout.prop(context.object.revolt, "use_tex_num")
 
 
 
@@ -100,7 +102,7 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
 
 
         rvtype = context.object.revolt.rv_type
-        if rvtype in ["NCP"]:
+        if rvtype in ["NCP"] or context.object.revolt.export_as_ncp:
             self.layout.prop(context.object.data.revolt, "face_material", text="Material".format(""))
         if rvtype in ["MESH", "WORLD", "OBJECT", "INSTANCE"]:
             row  = self.layout.row()
@@ -133,10 +135,7 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
             else:
                 self.layout.prop(context.object.data.revolt, "face_texture", text="Texture".format(""))
         else:
-            self.layout.label(text="Face properties are")
-            self.layout.label(text="only available for Mesh,")
-            self.layout.label(text="World, Object and")
-            self.layout.label(text="Instance types.")
+            self.layout.label(text="Assign a type first.", icon="INFO")
 # panel for setting vertex colors
 class RevoltVertexPanel(bpy.types.Panel):
     bl_label = "HabitatB Vertex Colors"
@@ -153,7 +152,7 @@ class RevoltVertexPanel(bpy.types.Panel):
         row = self.layout.row(align=True)
         if context.mode != "EDIT_MESH":
             row = self.layout.row()
-            row.label(text="Please enable Edit Mode to edit vertex colors.", icon='INFO')
+            row.label(text="Enable Edit Mode to edit vertex colors.", icon='INFO')
         else:
             mesh = obj.data
             bm = bmesh.from_edit_mesh(mesh)
@@ -166,7 +165,7 @@ class RevoltVertexPanel(bpy.types.Panel):
 
             if vc_layer is None:
                 row = self.layout.row()
-                row.label(text="Please create a vertex color layer.", icon='INFO')
+                row.label(text="No vertex color layer.", icon='INFO')
                 row = self.layout.row()
                 row.operator("vertexcolor.create_layer", icon='PLUS')
 
@@ -198,11 +197,11 @@ class RevoltVertexPanel(bpy.types.Panel):
 Tool panel in the left sidebar of the viewport for performing
 various operations
 """
-class RevoltToolPanel(bpy.types.Panel):
-    bl_label = "Re-Volt Tools"
+class RevoltIOToolPanel(bpy.types.Panel):
+    bl_label = "Import/Export"
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
-    # bl_context = "mesh_edit"
+    bl_context = "objectmode"
     bl_category = "Re-Volt"
 
     def draw(self, context):
@@ -222,8 +221,8 @@ class RevoltToolPanel(bpy.types.Panel):
         row.operator(io_ops.ImportW.bl_idname, text="W")
         row.operator(io_ops.ImportNCP.bl_idname, text="NCP")
         row = self.layout.row(align=True)
-        row.label(text="Export")
 
+        row.label(text="Export")
         if bpy.context.active_object:
             row.operator(io_ops.ExportPRM.bl_idname, text="PRM")
         else:
@@ -239,13 +238,23 @@ class RevoltToolPanel(bpy.types.Panel):
         else:
             row.operator(io_ops.ExportNCP.bl_idname, text="NCP", icon="X")
 
+
+class RevoltOBJToolPanel(bpy.types.Panel):
+    bl_label = "Object Types"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
+    bl_context = "objectmode"
+    bl_category = "Re-Volt"
+
+    def draw(self, context):
+
         if context.mode == "OBJECT":
             obj = context.object
             if not obj:
                 return
 
             row = self.layout.row()
-            row.label(text="Type (active object): "+obj.revolt.rv_type)
+            # row.label(text="Type (active object): "+obj.revolt.rv_type)
 
             # !!! self.layout.prop(context.object.revolt, "rv_type")
             # !!! IMPORTANT: unlike props for faces, this would only set the type the selected/active object
