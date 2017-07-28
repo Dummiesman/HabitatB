@@ -449,6 +449,7 @@ class ButtonBakeLightToVertex(bpy.types.Operator):
         # Set scene to render to vertex color
         rd = context.scene.render
         rd.use_bake_to_vertex_color = True
+        rd.use_textures = False
 
         shade_obj = context.object
 
@@ -462,7 +463,6 @@ class ButtonBakeLightToVertex(bpy.types.Operator):
             lamp_object1.data.energy = shade_obj.revolt.light_intensity1
             # Link lamp object to the scene so it'll appear in this scene
             scene.objects.link(lamp_object1)
-
 
             if shade_obj.revolt.light_orientation == "X":
                 lamp_object1.location = (1.0, 0, 0)
