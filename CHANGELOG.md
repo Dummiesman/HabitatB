@@ -19,3 +19,7 @@
 ## 2017-07-27
 + Renamed vertex color and uv channels to match Blender defaults
 + Removed icons from the additional export buttons
+
+## 2017-07-28
++ Added Lights and Shadow section in the Tool panel
++ Added button for automatically shading objects

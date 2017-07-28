@@ -44,7 +44,7 @@ class RevoltTypePanel(bpy.types.Panel):
     bl_label = "Re-Volt Object Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
-    bl_context = "object"
+    bl_context = "objectmode"
 
     def draw(self, context):
         self.layout.prop(context.object.revolt, "rv_type")
@@ -65,8 +65,6 @@ class RevoltTypePanel(bpy.types.Panel):
 
         self.layout.label(text="Other Properties:")
         self.layout.prop(context.object.revolt, "use_tex_num")
-
-
 
 class RevoltFacePropertiesPanel(bpy.types.Panel):
     bl_label = "Re-Volt Face Properties"
@@ -165,7 +163,7 @@ class RevoltVertexPanel(bpy.types.Panel):
 
             if vc_layer is None:
                 row = self.layout.row()
-                row.label(text="No vertex color layer.", icon='INFO')
+                row.label(text="No Vertex Color Layer.", icon='INFO')
                 row = self.layout.row()
                 row.operator("vertexcolor.create_layer", icon='PLUS')
 
@@ -290,6 +288,37 @@ class RevoltOBJToolPanel(bpy.types.Panel):
                 row.operator("alphacolor.create_layer", icon='PLUS')
 
 
+class RevoltLightPanel(bpy.types.Panel):
+    bl_label = "Light and Shadow"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
+    bl_context = "objectmode"
+    bl_category = "Re-Volt"
+
+    def draw(self, context):
+        view = context.space_data
+
+        obj = context.object
+        if obj:
+            if not obj.data.vertex_colors:
+                row = self.layout.row()
+                row.label(text="No Vertex Color Layer.", icon='INFO')
+                row = self.layout.row()
+                row.operator("mesh.vertex_color_add", icon='PLUS', text="Create Vertex Color Layer")
+            else:
+                row = self.layout.row()
+                row.operator("lighttools.bake", text="Shade (Vertex Color)")
+
+        # row = self.layout.row()
+        # if view.viewport_shade != 'TEXTURED':
+        #     row.label(text="Set viewport to texture for preview")
+        # if view.viewport_shade == 'TEXTURED' or context.mode == 'PAINT_TEXTURE':
+        #     if scene.render.use_shading_nodes or gs.material_mode != 'GLSL':
+        #         col.prop(view, "show_textured_shadeless")
+
+
+
+
 # BUTTONS
 
 # SET OBJECT TYPE
@@ -376,7 +405,7 @@ class ButtonVertexColorSet(bpy.types.Operator):
 
 class ButtonVertexColorCreateLayer(bpy.types.Operator):
     bl_idname = "vertexcolor.create_layer"
-    bl_label = "Create vertex color layer"
+    bl_label = "Create Vertex Color Layer"
 
     def execute(self, context):
         helpers.create_color_layer(context)
@@ -384,8 +413,46 @@ class ButtonVertexColorCreateLayer(bpy.types.Operator):
 
 class ButtonVertexColorCreateLayer(bpy.types.Operator):
     bl_idname = "alphacolor.create_layer"
-    bl_label = "Create alpha color layer"
+    bl_label = "Create Alpha Color Layer"
 
     def execute(self, context):
         helpers.create_alpha_layer(context)
+        return{'FINISHED'}
+
+class ButtonBakeLightToVertex(bpy.types.Operator):
+    bl_idname = "lighttools.bake"
+    bl_label = "Bake light"
+
+    def execute(self, context):
+        # Set scene to render to vertex color
+        rd = context.scene.render
+        rd.use_bake_to_vertex_color = True
+
+        shade_obj = context.object
+
+        scene = bpy.context.scene
+
+        # Create new lamp datablock
+        lamp_data = bpy.data.lamps.new(name="Hemi_shade", type='HEMI')
+
+        # Create new object with our lamp datablock
+        lamp_object = bpy.data.objects.new(name="Hemi_shade", object_data=lamp_data)
+
+        # Link lamp object to the scene so it'll appear in this scene
+        scene.objects.link(lamp_object)
+
+        # bake the image
+        bpy.ops.object.bake_image()
+
+        # And finally select it make active and delete it
+        shade_obj.select = False
+        lamp_object.select = True
+        scene.objects.active = lamp_object
+        bpy.ops.object.delete()
+
+        # select the other object again
+        shade_obj.select = True
+        scene.objects.active = shade_obj
+
+
         return{'FINISHED'}

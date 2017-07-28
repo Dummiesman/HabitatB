@@ -4,10 +4,10 @@ A Blender add-on for Re-Volt files, made for Blender 2.78+.
 
 ## Features
 List of currently supported features:
-+ Import and export PRM
-+ Import and export NCP
-+ Import and export W
-+ Import POS (experimental)
++ Import and export PRM (mesh)
++ Import and export NCP (collision)
++ Import and export W (level meshes)
++ Import POS (position nodes) (experimental)
 + Editing face properties and vertex colors
 
 ## Links
