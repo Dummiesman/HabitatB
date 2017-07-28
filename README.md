@@ -9,6 +9,7 @@ List of currently supported features:
 + Import and export W (level meshes)
 + Import POS (position nodes) (experimental)
 + Editing face properties and vertex colors
++ Easily shade objects (bake light to vertex)
 
 ## Links
 + [Download](https://github.com/Dummiesman/HabitatB/archive/master.zip)

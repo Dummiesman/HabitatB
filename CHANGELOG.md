@@ -23,3 +23,5 @@
 ## 2017-07-28
 + Added Lights and Shadow section in the Tool panel
 + Added button for automatically shading objects
+## 2017-07-29
++ Added more options for shading automatically

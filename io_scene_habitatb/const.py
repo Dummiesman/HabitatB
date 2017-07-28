@@ -9,15 +9,15 @@ FACE_ENV = 2048             # 0x800
 FACE_CLOTH = 4096           # 0x1000
 FACE_SKIP = 8192            # 0x2000
 
-FACE_PROPS = [FACE_QUAD, 
-              FACE_DOUBLE, 
-              FACE_TRANSLUCENT, 
-              FACE_MIRROR, 
-              FACE_TRANSL_TYPE, 
-              FACE_TEXANIM, 
-              FACE_NOENV, 
-              FACE_ENV, 
-              FACE_CLOTH, 
+FACE_PROPS = [FACE_QUAD,
+              FACE_DOUBLE,
+              FACE_TRANSLUCENT,
+              FACE_MIRROR,
+              FACE_TRANSL_TYPE,
+              FACE_TEXANIM,
+              FACE_NOENV,
+              FACE_ENV,
+              FACE_CLOTH,
               FACE_SKIP]
 
 materials = [
@@ -87,3 +87,15 @@ object_types = [
     ("OBJECT_TYPE_BOMBGLOW", "Bombglow", "Bombglow", "", 36),
     ("OBJECT_TYPE_MAX", "Max", "Max", "", 37),
     ]
+
+lights = [
+    ("None", "None", "", -1),
+    ("HEMI", "Soft", "", 0),
+    ("SUN", "Hard", "", 1)
+]
+
+light_orientations = [
+    ("X", "X (Horizontal)", "", 0),
+    ("Y", "Y (Horizontal)", "", 1),
+    ("Z", "Z (Vertical)", "", 2)
+]

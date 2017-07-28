@@ -299,25 +299,47 @@ class RevoltLightPanel(bpy.types.Panel):
         view = context.space_data
 
         obj = context.object
-        if obj:
+        if obj and obj.select:
+            # check if the object has a vertex color layer
             if not obj.data.vertex_colors:
                 row = self.layout.row()
                 row.label(text="No Vertex Color Layer.", icon='INFO')
                 row = self.layout.row()
                 row.operator("mesh.vertex_color_add", icon='PLUS', text="Create Vertex Color Layer")
             else:
+                # light orientation selection
                 row = self.layout.row()
-                row.operator("lighttools.bake", text="Shade (Vertex Color)")
-
+                row.prop(context.object.revolt, "light_orientation", text="Orientation")
+                if obj.revolt.light_orientation == "X":
+                    dirs = ["Left", "Right"]
+                if obj.revolt.light_orientation == "Y":
+                    dirs = ["Front", "Back"]
+                if obj.revolt.light_orientation == "Z":
+                    dirs = ["Top", "Bottom"]
+                # headings
+                row = self.layout.row()
+                row.label(text="Direction")
+                row.label(text="Light")
+                row.label(text="Intensity")
+                # settings for the first light
+                row = self.layout.row()
+                row.label(text=dirs[0])
+                row.prop(context.object.revolt, "light1", text="")
+                row.prop(context.object.revolt, "light_intensity1", text="")
+                # settings for the second light
+                row = self.layout.row()
+                row.label(text=dirs[1])
+                row.prop(context.object.revolt, "light2", text="")
+                row.prop(context.object.revolt, "light_intensity2", text="")
+                # bake button
+                row = self.layout.row()
+                row.operator("lighttools.bake", text="Shade (Vertex Color)", icon="MATSPHERE")
         # row = self.layout.row()
         # if view.viewport_shade != 'TEXTURED':
         #     row.label(text="Set viewport to texture for preview")
         # if view.viewport_shade == 'TEXTURED' or context.mode == 'PAINT_TEXTURE':
         #     if scene.render.use_shading_nodes or gs.material_mode != 'GLSL':
         #         col.prop(view, "show_textured_shadeless")
-
-
-
 
 # BUTTONS
 
@@ -432,22 +454,50 @@ class ButtonBakeLightToVertex(bpy.types.Operator):
 
         scene = bpy.context.scene
 
-        # Create new lamp datablock
-        lamp_data = bpy.data.lamps.new(name="Hemi_shade", type='HEMI')
+        if shade_obj.revolt.light1 != "None":
+            # Create new lamp datablock
+            lamp_data1 = bpy.data.lamps.new(name="ShadeLight1", type=shade_obj.revolt.light1)
+            # Create new object with our lamp datablock
+            lamp_object1 = bpy.data.objects.new(name="ShadeLight1", object_data=lamp_data1)
+            lamp_object1.data.energy = shade_obj.revolt.light_intensity1
+            # Link lamp object to the scene so it'll appear in this scene
+            scene.objects.link(lamp_object1)
 
-        # Create new object with our lamp datablock
-        lamp_object = bpy.data.objects.new(name="Hemi_shade", object_data=lamp_data)
 
-        # Link lamp object to the scene so it'll appear in this scene
-        scene.objects.link(lamp_object)
+            if shade_obj.revolt.light_orientation == "X":
+                lamp_object1.location = (1.0, 0, 0)
+                lamp_object1.rotation_euler = (0, -90, 0)
+            elif shade_obj.revolt.light_orientation == "Y":
+                lamp_object1.location = (0, 1.0, 0)
+                lamp_object1.rotation_euler = (-90, 0, 0)
+            elif shade_obj.revolt.light_orientation == "Z":
+                lamp_object1.location = (0, 0, 1.0)
+
+        if shade_obj.revolt.light2 != "None":
+            lamp_data2 = bpy.data.lamps.new(name="ShadeLight2", type=shade_obj.revolt.light2)
+            lamp_object2 = bpy.data.objects.new(name="ShadeLight2", object_data=lamp_data2)
+            lamp_object2.data.energy = shade_obj.revolt.light_intensity2
+            scene.objects.link(lamp_object2)
+
+            if shade_obj.revolt.light_orientation == "X":
+                lamp_object2.location = (-1.0, 0, 0)
+                lamp_object2.rotation_euler = (0, 90, 0)
+            elif shade_obj.revolt.light_orientation == "Y":
+                lamp_object2.location = (0, -1.0, 0)
+                lamp_object2.rotation_euler = (90, 0, 0)
+            elif shade_obj.revolt.light_orientation == "Z":
+                lamp_object2.location = (0, 0, -1.0)
+                lamp_object2.rotation_euler = (180, 0, 0)
 
         # bake the image
         bpy.ops.object.bake_image()
 
-        # And finally select it make active and delete it
+        # And finally select it and delete it
         shade_obj.select = False
-        lamp_object.select = True
-        scene.objects.active = lamp_object
+        if shade_obj.revolt.light1 != "None":
+            lamp_object1.select = True
+        if shade_obj.revolt.light2 != "None":
+            lamp_object2.select = True
         bpy.ops.object.delete()
 
         # select the other object again

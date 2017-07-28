@@ -16,7 +16,7 @@ bl_info = {
     "location": "File > Import-Export",
     "description": "Import and export Re-Volt files",
     "warning": "",
-    "wiki_url": "https://github.com/Dummiesman/HabitatB/wiki",
+    "wiki_url": "http://learn.re-volt.io/habitatb-docs",
     "support": 'COMMUNITY',
     "category": "Import-Export"}
 
@@ -53,10 +53,10 @@ for var in locals_copy:
 
 # object properties for all rv objects
 class RevoltObjectProperties(bpy.types.PropertyGroup):
-    rv_type = EnumProperty(name = "Type", items = (("NONE", "None", "None"), 
-                                                ("MESH", "Mesh (.prm)", "Mesh"), 
-                                                #("OBJECT", "Object (.fob)", "Object"), 
-                                                #("INSTANCE", "Instance (.fin)", "Instance"), 
+    rv_type = EnumProperty(name = "Type", items = (("NONE", "None", "None"),
+                                                ("MESH", "Mesh (.prm)", "Mesh"),
+                                                #("OBJECT", "Object (.fob)", "Object"),
+                                                #("INSTANCE", "Instance (.fin)", "Instance"),
                                                 ("WORLD", "World (.w)", "World"),
                                                 ("NCP", "Collision (.ncp)", "Collision (NCP)"),
                                                 #("HULL", "Hull (.hul)", "Hull"),
@@ -66,7 +66,7 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
     # this is the flags layer for meshes
     flags = IntVectorProperty(name = "Flags", size = 16)
     texture = IntProperty(name = "Texture") # deprecated, could be removed since textures are saved per-face now
-    # this is for fin and fob file entries: each object can have unique settings. 
+    # this is for fin and fob file entries: each object can have unique settings.
     # fin files have predefined settings
     flag1_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 0), set = lambda s,v: helpers.set_flag_long(s, v, 0))
     flag2_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 4), set = lambda s,v: helpers.set_flag_long(s, v, 4))
@@ -76,6 +76,12 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
     export_as_ncp = BoolProperty(name = "Additionally export as NCP (.ncp)")
     export_as_w = BoolProperty(name = "Additionally export as World (.w)")
     use_tex_num = BoolProperty(name = "Keep texture number from mesh.")
+    light1 = EnumProperty(name = "Light 1", items = const.lights)
+    light2 = EnumProperty(name = "Light 2", items = const.lights)
+    light_intensity1 = FloatProperty(name = "Intensity 1", min=0.0, default=1)
+    light_intensity2 = FloatProperty(name = "Intensity 2", min=0.0, default=1)
+    light_orientation = EnumProperty(name = "Orientation", items = const.light_orientations)
+
 
 class RevoltMeshProperties(bpy.types.PropertyGroup):
     face_material = EnumProperty(name = "Material", items = const.materials, get = helpers.get_face_material, set = helpers.set_face_material)
@@ -90,6 +96,7 @@ class RevoltMeshProperties(bpy.types.PropertyGroup):
     face_cloth = BoolProperty(name = "Cloth effect (.prm)", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_CLOTH), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_CLOTH))
     face_skip = BoolProperty(name = "Do not export", get = lambda s: bool(helpers.get_face_property(s) & const.FACE_SKIP), set = lambda s,v: helpers.set_face_property(s, v, const.FACE_SKIP))
 
+# class RevoltUIProperties(bpy.types.PropertyGroup):
 
 # add menu entries
 # PRM
