@@ -25,3 +25,5 @@
 + Added button for automatically shading objects
 ## 2017-07-29
 + Added more options for shading automatically
++ Layout updates and fixes for the automatic shading
++ Added a function for baking inverted shadows automatically
