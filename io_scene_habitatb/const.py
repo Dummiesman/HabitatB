@@ -99,3 +99,7 @@ light_orientations = [
     ("Y", "Y (Horizontal)", "", 1),
     ("Z", "Z (Vertical)", "", 2)
 ]
+shadow_methods = [
+    ("ADAPTIVE_QMC", "Default (fast)", "", 0),
+    ("CONSTANT_QMC", "High Quality (slow)", "", 1)
+]

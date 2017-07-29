@@ -76,11 +76,15 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
     export_as_ncp = BoolProperty(name = "Additionally export as NCP (.ncp)")
     export_as_w = BoolProperty(name = "Additionally export as World (.w)")
     use_tex_num = BoolProperty(name = "Keep texture number from mesh.")
-    light1 = EnumProperty(name = "Light 1", items = const.lights)
-    light2 = EnumProperty(name = "Light 2", items = const.lights)
+    light1 = EnumProperty(name = "Light 1", items = const.lights, default = "SUN")
+    light2 = EnumProperty(name = "Light 2", items = const.lights, default = "HEMI")
     light_intensity1 = FloatProperty(name = "Intensity 1", min=0.0, default=1)
-    light_intensity2 = FloatProperty(name = "Intensity 2", min=0.0, default=1)
-    light_orientation = EnumProperty(name = "Orientation", items = const.light_orientations)
+    light_intensity2 = FloatProperty(name = "Intensity 2", min=0.0, default=.1)
+    light_orientation = EnumProperty(name = "Orientation", items=const.light_orientations, default = "Z")
+    shadow_method = EnumProperty(name = "Method", items=const.shadow_methods)
+    shadow_quality = IntProperty(name = "Quality", min=0, max=32, default=8)
+    shadow_resolution = IntProperty(name = "Resolution", min=32, max=8192, default=128)
+    shadow_softness = FloatProperty(name = "Softness", min=0.0, max=100.0, default=0.5)
 
 
 class RevoltMeshProperties(bpy.types.PropertyGroup):

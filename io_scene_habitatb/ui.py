@@ -11,6 +11,7 @@
 import bpy
 import bmesh
 import mathutils
+from math import pi
 from . import helpers, const, io_ops
 
 from bpy.props import (
@@ -67,7 +68,7 @@ class RevoltTypePanel(bpy.types.Panel):
         self.layout.prop(context.object.revolt, "use_tex_num")
 
 class RevoltFacePropertiesPanel(bpy.types.Panel):
-    bl_label = "Re-Volt Face Properties"
+    bl_label = "Face Properties"
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "mesh_edit"
@@ -136,7 +137,7 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
             self.layout.label(text="Assign a type first.", icon="INFO")
 # panel for setting vertex colors
 class RevoltVertexPanel(bpy.types.Panel):
-    bl_label = "HabitatB Vertex Colors"
+    bl_label = "Vertex Colors"
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "mesh_edit"
@@ -218,8 +219,8 @@ class RevoltIOToolPanel(bpy.types.Panel):
         row.operator(io_ops.ImportPRM.bl_idname, text="PRM")
         row.operator(io_ops.ImportW.bl_idname, text="W")
         row.operator(io_ops.ImportNCP.bl_idname, text="NCP")
-        row = self.layout.row(align=True)
 
+        row = self.layout.row(align=True)
         row.label(text="Export")
         if bpy.context.active_object:
             row.operator(io_ops.ExportPRM.bl_idname, text="PRM")
@@ -251,25 +252,26 @@ class RevoltOBJToolPanel(bpy.types.Panel):
             if not obj:
                 return
 
-            row = self.layout.row()
+            box = self.layout.box()
             # row.label(text="Type (active object): "+obj.revolt.rv_type)
 
             # !!! self.layout.prop(context.object.revolt, "rv_type")
             # !!! IMPORTANT: unlike props for faces, this would only set the type the selected/active object
             # !!! that's why we need the operator functions!
 
-            self.layout.label(text="Object type (for all selected):")
-            row = self.layout.row(align=True)
+            box.label(text="Object type (for all selected):")
+            row = box.row(align=True)
             row.operator("objtype.setw", text="World")
             row.operator("objtype.setprm", text="PRM")
             row.operator("objtype.setncp", text="NCP")
 
             # Batch buttons for setting additional export types
-            self.layout.label(text="Additional export (for all selected):")
-            row = self.layout.row(align=True)
+            box = self.layout.box()
+            box.label(text="Additional export (for all selected):")
+            row = box.row(align=True)
             row.operator("objtype.setalladdw", text="World")
             row.operator("objtype.unsetalladdw", text="Not World")
-            row = self.layout.row(align=True)
+            row = box.row(align=True)
             row.operator("objtype.setalladdncp", text="NCP")
             row.operator("objtype.unsetalladdncp", text="Not NCP")
 
@@ -308,7 +310,9 @@ class RevoltLightPanel(bpy.types.Panel):
                 row.operator("mesh.vertex_color_add", icon='PLUS', text="Create Vertex Color Layer")
             else:
                 # light orientation selection
-                row = self.layout.row()
+                box = self.layout.box()
+                box.label(text="Shade Object")
+                row = box.row()
                 row.prop(context.object.revolt, "light_orientation", text="Orientation")
                 if obj.revolt.light_orientation == "X":
                     dirs = ["Left", "Right"]
@@ -317,29 +321,35 @@ class RevoltLightPanel(bpy.types.Panel):
                 if obj.revolt.light_orientation == "Z":
                     dirs = ["Top", "Bottom"]
                 # headings
-                row = self.layout.row()
+                row = box.row()
                 row.label(text="Direction")
                 row.label(text="Light")
                 row.label(text="Intensity")
                 # settings for the first light
-                row = self.layout.row()
+                row = box.row()
                 row.label(text=dirs[0])
                 row.prop(context.object.revolt, "light1", text="")
                 row.prop(context.object.revolt, "light_intensity1", text="")
                 # settings for the second light
-                row = self.layout.row()
+                row = box.row()
                 row.label(text=dirs[1])
                 row.prop(context.object.revolt, "light2", text="")
                 row.prop(context.object.revolt, "light_intensity2", text="")
                 # bake button
-                row = self.layout.row()
-                row.operator("lighttools.bake", text="Shade (Vertex Color)", icon="MATSPHERE")
-        # row = self.layout.row()
-        # if view.viewport_shade != 'TEXTURED':
-        #     row.label(text="Set viewport to texture for preview")
-        # if view.viewport_shade == 'TEXTURED' or context.mode == 'PAINT_TEXTURE':
-        #     if scene.render.use_shading_nodes or gs.material_mode != 'GLSL':
-        #         col.prop(view, "show_textured_shadeless")
+                row = box.row()
+                row.operator("lighttools.bakevertex", text="Generate Shading", icon="LIGHTPAINT")
+
+
+            box = self.layout.box()
+            box.label(text="Generate Shadow Texture")
+            row = box.row()
+            row.prop(context.object.revolt, "shadow_method")
+            col = box.column(align=True)
+            col.prop(context.object.revolt, "shadow_quality")
+            col.prop(context.object.revolt, "shadow_softness")
+            col.prop(context.object.revolt, "shadow_resolution")
+            row = box.row()
+            row.operator("lighttools.bakeshadow", icon="LAMP_SPOT", text="Generate Shadow")
 
 # BUTTONS
 
@@ -441,9 +451,75 @@ class ButtonVertexColorCreateLayer(bpy.types.Operator):
         helpers.create_alpha_layer(context)
         return{'FINISHED'}
 
+class ButtonBakeShadow(bpy.types.Operator):
+    bl_idname = "lighttools.bakeshadow"
+    bl_label = "Bake Shadow"
+
+    def execute(self, context):
+        # This will create a negative shadow (Re-Volt requires a neg. texture)
+        rd = context.scene.render
+        rd.use_bake_to_vertex_color = False
+        rd.use_textures = False
+
+        shade_obj = context.object
+        scene = bpy.context.scene
+
+        resolution = shade_obj.revolt.shadow_resolution
+        quality = shade_obj.revolt.shadow_quality
+        method = shade_obj.revolt.shadow_method
+        softness = shade_obj.revolt.shadow_softness
+
+        # create hemi (positive)
+        lamp_data_pos = bpy.data.lamps.new(name="ShadePositive", type="HEMI")
+        lamp_positive = bpy.data.objects.new(name="ShadePositive", object_data=lamp_data_pos)
+
+        lamp_data_neg = bpy.data.lamps.new(name="ShadeNegative", type="SUN")
+        lamp_data_neg.use_negative = True
+        lamp_data_neg.shadow_method = "RAY_SHADOW"
+        lamp_data_neg.shadow_ray_samples = quality
+        lamp_data_neg.shadow_ray_sample_method = method
+        lamp_data_neg.shadow_soft_size = softness
+        lamp_negative = bpy.data.objects.new(name="ShadeNegative", object_data=lamp_data_neg)
+
+        scene.objects.link(lamp_positive)
+        scene.objects.link(lamp_negative)
+
+        # create a texture
+        shadow_tex = bpy.data.images.new(name="Shadow", width=resolution, height=resolution)
+
+        bb = shade_obj.bound_box
+        loc = (((bb[0][0] + bb[4][0]) / 2 * shade_obj.scale[0]) + shade_obj.location[0],
+               ((bb[0][1] + bb[3][1]) / 2 * shade_obj.scale[1]) + shade_obj.location[1],
+                (bb[0][2] * shade_obj.scale[2]) + shade_obj.location[2])
+
+        # create the shadow plane and map it
+        bpy.ops.mesh.primitive_plane_add(location=loc, enter_editmode=True)
+        bpy.ops.uv.unwrap()
+        bpy.ops.object.mode_set(mode='OBJECT')
+        shadow_plane = context.object
+
+        for uv_face in context.object.data.uv_textures.active.data:
+            uv_face.image = shadow_tex
+
+        bpy.ops.object.bake_image()
+
+        # And finally select it and delete it
+        shade_obj.select = False
+        shadow_plane.select = False
+        lamp_positive.select = True
+        lamp_negative.select = True
+        bpy.ops.object.delete()
+
+        # select the other object again
+        shade_obj.select = True
+        scene.objects.active = shade_obj
+
+        return{'FINISHED'}
+
 class ButtonBakeLightToVertex(bpy.types.Operator):
-    bl_idname = "lighttools.bake"
+    bl_idname = "lighttools.bakevertex"
     bl_label = "Bake light"
+
 
     def execute(self, context):
         # Set scene to render to vertex color
@@ -466,10 +542,10 @@ class ButtonBakeLightToVertex(bpy.types.Operator):
 
             if shade_obj.revolt.light_orientation == "X":
                 lamp_object1.location = (1.0, 0, 0)
-                lamp_object1.rotation_euler = (0, -90, 0)
+                lamp_object1.rotation_euler = (0, pi/2, 0)
             elif shade_obj.revolt.light_orientation == "Y":
                 lamp_object1.location = (0, 1.0, 0)
-                lamp_object1.rotation_euler = (-90, 0, 0)
+                lamp_object1.rotation_euler = (-pi/2, 0, 0)
             elif shade_obj.revolt.light_orientation == "Z":
                 lamp_object1.location = (0, 0, 1.0)
 
@@ -481,13 +557,13 @@ class ButtonBakeLightToVertex(bpy.types.Operator):
 
             if shade_obj.revolt.light_orientation == "X":
                 lamp_object2.location = (-1.0, 0, 0)
-                lamp_object2.rotation_euler = (0, 90, 0)
+                lamp_object2.rotation_euler = (0, -pi/2, 0)
             elif shade_obj.revolt.light_orientation == "Y":
                 lamp_object2.location = (0, -1.0, 0)
-                lamp_object2.rotation_euler = (90, 0, 0)
+                lamp_object2.rotation_euler = (pi/2, 0, 0)
             elif shade_obj.revolt.light_orientation == "Z":
                 lamp_object2.location = (0, 0, -1.0)
-                lamp_object2.rotation_euler = (180, 0, 0)
+                lamp_object2.rotation_euler = (pi, 0, 0)
 
         # bake the image
         bpy.ops.object.bake_image()
