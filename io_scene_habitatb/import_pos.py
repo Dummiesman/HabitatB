@@ -65,7 +65,7 @@ Node {
 import bpy, struct, bmesh, re, os, glob
 import time, struct
 from mathutils import Vector, Color
- 
+
 from . import const, parameters
 
 export_filename = None
@@ -79,8 +79,6 @@ def load_pos_file(file, matrix):
     num_nodes = struct.unpack("<l", file.read(4))[0]
     start_node = struct.unpack("<l", file.read(4))[0]
     total_dist = struct.unpack("<f", file.read(4))[0]
-
-
 
     for n in range(num_nodes):
         print("NODE", n)
@@ -107,9 +105,9 @@ def load_pos_file(file, matrix):
             print("   Link:", x)
             nxt = struct.unpack("<l", file.read(4))[0]
             print("      Next", nxt)
-    
 
-      
+
+
 
 ######################################################
 # IMPORT

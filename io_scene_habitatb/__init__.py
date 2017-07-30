@@ -85,6 +85,7 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
     shadow_quality = IntProperty(name = "Quality", min=0, max=32, default=8)
     shadow_resolution = IntProperty(name = "Resolution", min=32, max=8192, default=128)
     shadow_softness = FloatProperty(name = "Softness", min=0.0, max=100.0, default=0.5)
+    shadow_table = StringProperty(name = "Shadowtable", default="")
 
 
 class RevoltMeshProperties(bpy.types.PropertyGroup):

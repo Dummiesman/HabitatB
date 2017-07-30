@@ -10,7 +10,7 @@ List of currently supported features:
 + Import POS (position nodes) (experimental)
 + Editing face properties and vertex colors
 + Easily shade objects (bake light to vertex)
-+ Create car shadows for in-game use
++ Create car shadows and coordinates for in-game use
 
 ## Links
 + [Download](https://github.com/Dummiesman/HabitatB/archive/master.zip)
