@@ -24,7 +24,10 @@ def load_prm_file(file, matrix, texfile):
     scn = bpy.context.scene
 
     # get mesh name
-    mesh_name = bpy.path.basename(export_filename)
+    if export_filename:
+        mesh_name = bpy.path.basename(export_filename)
+    else:
+        mesh_name = path[-1]
 
     # add a mesh and link it to the scene
     me = bpy.data.meshes.new(mesh_name)
@@ -160,9 +163,11 @@ def load_prm_file(file, matrix, texfile):
 ######################################################
 # IMPORT
 ######################################################
-def load_prm(filepath, context, matrix, texture):
+def load_prm(filepath, context, matrix):
 
     print("importing PRM: %r..." % (filepath))
+
+    texture = load_texture(filepath)
 
     time1 = time.clock()
     file = open(filepath, 'rb')
@@ -198,8 +203,6 @@ def load(operator, filepath, context, matrix):
     global export_filename
     export_filename = filepath
 
-    texture = load_texture(filepath)
-
-    load_prm(filepath, context, matrix, texture)
+    load_prm(filepath, context, matrix)
 
     return {'FINISHED'}

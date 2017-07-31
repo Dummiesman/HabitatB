@@ -7,6 +7,8 @@
 #
 # ##### END LICENSE BLOCK #####
 
+import os
+
 def read_parameters(f):
 	parameters = {}
 	file = open(f, "r")
@@ -29,9 +31,15 @@ def read_parameters(f):
 			else:
 				i += 1
 				continue
-		
+
 		# split comments from lines and remove tabs
 		line = line.split(";")[0].replace('\t', ' ')
+
+		if "/" in line:
+			line = line.replace("/", os.sep).lower()
+		elif "\\" in line:
+			line = line.replace("\\", os.sep).lower()
+
 
 		# skips an empty line
 		if not line.strip():
@@ -41,8 +49,6 @@ def read_parameters(f):
 		# detects start of a block
 		if '{' in line:
 			block = line.split('{')[0].strip().lower()
-			print("Block:", block)
-		
 		# reads block entries
 		elif block:
 			if '}' in line:
@@ -71,7 +77,7 @@ def read_parameters(f):
 	return parameters
 
 def parse_line(line):
-	
+
 	line = line.replace(',', ' ') # get rid of commas, they're not needed (e.g. offset)
 	line = line.strip() # remove whitespace
 	line = ' '.join(line.split()) # remove whitespace between words (make it just one space)
@@ -84,13 +90,12 @@ def parse_line(line):
 		value = line.split(' ')[2:]
 	else:
 		value = line.split(' ')[1:]
-	
+
 	# for the name, only split once and remove the ""
 	if entry == "name":
 		value = line.split(' ', 1)[1].replace('"', '')
 
 	else:
-
 		if type(value) is list:
 			for i in range(len(value)):
 				if '.' in value[i] and value[i].replace('.', '').replace('-', '').isdigit():
@@ -109,5 +114,4 @@ def parse_line(line):
 		if len(value) == 1:
 			value = value[0]
 
-	print(entry, value)
 	return (entry, value)

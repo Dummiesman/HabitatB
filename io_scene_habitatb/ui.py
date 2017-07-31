@@ -214,14 +214,18 @@ class RevoltIOToolPanel(bpy.types.Panel):
             if obj.revolt.export_as_w:
                 types.append("WORLD")
 
-        row = self.layout.row(align=True)
-        row.label(text="Import")
+        box = self.layout.box()
+        box.label(text="Import", icon="IMPORT")
+        row = box.row(align=True)
         row.operator(io_ops.ImportPRM.bl_idname, text="PRM")
         row.operator(io_ops.ImportW.bl_idname, text="W")
         row.operator(io_ops.ImportNCP.bl_idname, text="NCP")
+        row = box.row(align=True)
+        row.operator(io_ops.ImportCAR.bl_idname, text="Car (parameters.txt)")
 
-        row = self.layout.row(align=True)
-        row.label(text="Export")
+        box = self.layout.box()
+        box.label(text="Export", icon="EXPORT")
+        row = box.row(align=True)
         if bpy.context.active_object:
             row.operator(io_ops.ExportPRM.bl_idname, text="PRM")
         else:

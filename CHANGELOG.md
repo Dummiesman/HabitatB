@@ -31,3 +31,9 @@
 + Added options to the shadow generator
 + Shadowtable generator Added
 + UI cleanup
+
+## 2017-07-31
++ Added an option to import cars from parameters.txt
+    + Currently, PRMs have to be in the same folder as the .txt
+    + Imports only body and wheels
++ Minor UI changes (icons)

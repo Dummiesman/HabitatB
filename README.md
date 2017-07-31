@@ -8,6 +8,7 @@ List of currently supported features:
 + Import and export NCP (collision)
 + Import and export W (level meshes)
 + Import POS (position nodes) (experimental)
++ Import Cars from parameters.txt (experimental)
 + Editing face properties and vertex colors
 + Easily shade objects (bake light to vertex)
 + Create car shadows and coordinates for in-game use

@@ -129,6 +129,10 @@ def menu_func_export_w(self, context):
 def menu_func_import_pos(self, context):
     self.layout.operator(io_ops.ImportPOS.bl_idname, text="Re-Volt Position Nodes (.pan)")
 
+# CAR
+def menu_func_import_car(self, context):
+    self.layout.operator(io_ops.ImportCAR.bl_idname, text="Re-Volt Car (parameters.txt)")
+
 def register():
     bpy.utils.register_module(__name__)
 
@@ -136,6 +140,7 @@ def register():
     bpy.types.INFO_MT_file_import.append(menu_func_import_ncp)
     bpy.types.INFO_MT_file_import.append(menu_func_import_w)
     bpy.types.INFO_MT_file_import.append(menu_func_import_pos)
+    bpy.types.INFO_MT_file_import.append(menu_func_import_car)
     bpy.types.INFO_MT_file_export.append(menu_func_export_prm)
     bpy.types.INFO_MT_file_export.append(menu_func_export_ncp)
     bpy.types.INFO_MT_file_export.append(menu_func_export_w)
@@ -152,6 +157,7 @@ def unregister():
     bpy.types.INFO_MT_file_import.remove(menu_func_import_ncp)
     bpy.types.INFO_MT_file_import.remove(menu_func_import_w)
     bpy.types.INFO_MT_file_import.remove(menu_func_import_pos)
+    bpy.types.INFO_MT_file_import.remove(menu_func_import_car)
     bpy.types.INFO_MT_file_export.remove(menu_func_export_ncp)
     bpy.types.INFO_MT_file_export.remove(menu_func_export_w)
     bpy.types.INFO_MT_file_export.remove(menu_func_export_prm)
