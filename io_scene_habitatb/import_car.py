@@ -45,6 +45,8 @@ def load_car(filepath, context, matrix):
     wheel2loc = Vector(params["wheel 2"]["offset1"]) * matrix
     wheel3loc = Vector(params["wheel 3"]["offset1"]) * matrix
 
+    folder = os.sep.join(filepath.split(os.sep)[:-1])
+    
     wheel0_modelnum = int(params["wheel 0"]["modelnum"])
     if wheel0_modelnum >= 0:
         wheel0 = params["model {}".format(wheel0_modelnum)]
@@ -77,7 +79,6 @@ def load_car(filepath, context, matrix):
     else:
         wheel3 = None
 
-    folder = os.sep.join(filepath.split(os.sep)[:-1])
 
     # check if body is in the same folder
     if body.split(os.sep)[-1] in os.listdir(folder):
