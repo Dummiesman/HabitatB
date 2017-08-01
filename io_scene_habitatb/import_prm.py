@@ -19,7 +19,7 @@ export_filename = None
 ######################################################
 # IMPORT MAIN FILES
 ######################################################
-def load_prm_file(file, matrix, texfile):
+def load_prm_file(file, matrix, texfile, rvtype=None):
     path = file.name.split(os.sep)
     scn = bpy.context.scene
 
@@ -164,7 +164,7 @@ def load_prm_file(file, matrix, texfile):
 ######################################################
 # IMPORT
 ######################################################
-def load_prm(filepath, context, matrix):
+def load_prm(filepath, context, matrix, rvtype=None):
 
     print("importing PRM: %r..." % (filepath))
 
@@ -174,7 +174,7 @@ def load_prm(filepath, context, matrix):
     file = open(filepath, 'rb')
 
     # start reading the prm file
-    load_prm_file(file, matrix, texture)
+    load_prm_file(file, matrix, texture, rvtype)
 
     print(" done in %.4f sec." % (time.clock() - time1))
     file.close()

@@ -7,6 +7,7 @@ List of currently supported features:
 + Import and export PRM (mesh)
 + Import and export NCP (collision)
 + Import and export W (level meshes)
++ Import FIN (Instance files) (experimental)
 + Import POS (position nodes) (experimental)
 + Import Cars from parameters.txt (experimental)
 + Editing face properties and vertex colors

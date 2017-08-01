@@ -127,6 +127,33 @@ class ImportPOS(bpy.types.Operator, ImportHelper):
             axis_conversion(to_up = self.up_axis,
                             to_forward = self.forward_axis).to_4x4() * self.scale)
 
+class ImportFIN(bpy.types.Operator, ImportHelper):
+    """Import from FIN file format (.fin)"""
+    bl_idname = "import_scene.fin"
+    bl_label = 'Import FIN'
+    bl_options = {'UNDO'}
+
+    filename_ext = ".fin"
+    filter_glob = StringProperty(
+            default="*.fin",
+            options={'HIDDEN'},
+            )
+
+    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
+    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+
+    def execute(self, context):
+        from . import import_fin
+
+        return import_fin.load(
+            self,
+            self.properties.filepath,
+            context,
+            axis_conversion(to_up = self.up_axis,
+                            to_forward = self.forward_axis).to_4x4() * self.scale)
+
+
 class ImportCAR(bpy.types.Operator, ImportHelper):
     """Import car from parameters.txt"""
     bl_idname = "import_scene.car"

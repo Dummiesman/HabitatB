@@ -45,7 +45,7 @@ class RevoltTypePanel(bpy.types.Panel):
     bl_label = "Re-Volt Object Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
-    bl_context = "objectmode"
+    bl_context = "object"
 
     def draw(self, context):
         self.layout.prop(context.object.revolt, "rv_type")

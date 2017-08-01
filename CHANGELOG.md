@@ -39,6 +39,7 @@
 + Minor UI changes (icons)
 
 ## 2017-08-01
-+ PRM texture lodaing fixes
++ PRM texture loading fixes
 + Added a color picker for vertex painting
 + Added vertex paint modes depending on the select mode (vertex, edge, face).
++ Added initial instance (.fin) support
