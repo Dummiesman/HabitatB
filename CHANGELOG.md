@@ -37,3 +37,8 @@
     + Currently, PRMs have to be in the same folder as the .txt
     + Imports only body and wheels
 + Minor UI changes (icons)
+
+## 2017-08-01
++ PRM texture lodaing fixes
++ Added a color picker for vertex painting
++ Added vertex paint modes depending on the select mode (vertex, edge, face).
