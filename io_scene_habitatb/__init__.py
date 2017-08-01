@@ -54,25 +54,45 @@ for var in locals_copy:
 
 # object properties for all rv objects
 class RevoltObjectProperties(bpy.types.PropertyGroup):
+    # this is for setting the object type (mesh, w, ncp, fin, ...)
     rv_type = EnumProperty(name = "Type", items = (("NONE", "None", "None"),
                                                 ("MESH", "Mesh (.prm)", "Mesh"),
                                                 #("OBJECT", "Object (.fob)", "Object"),
-                                                #("INSTANCE", "Instance (.fin)", "Instance"),
+                                                ("INSTANCE", "Instance (.fin)", "Instance"),
                                                 ("WORLD", "World (.w)", "World"),
                                                 ("NCP", "Collision (.ncp)", "Collision (NCP)"),
                                                 #("HULL", "Hull (.hul)", "Hull"),
                                                 ))
-    # this is for setting the object type (mesh, w, ncp, fin, ...)
     object_type = EnumProperty(name = "Object type", items = const.object_types)
     # this is the flags layer for meshes
     flags = IntVectorProperty(name = "Flags", size = 16)
     texture = IntProperty(name = "Texture") # deprecated, could be removed since textures are saved per-face now
-    # this is for fin and fob file entries: each object can have unique settings.
-    # fin files have predefined settings
-    flag1_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 0), set = lambda s,v: helpers.set_flag_long(s, v, 0))
-    flag2_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 4), set = lambda s,v: helpers.set_flag_long(s, v, 4))
-    flag3_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 8), set = lambda s,v: helpers.set_flag_long(s, v, 8))
-    flag4_long = IntProperty(get = lambda s: helpers.get_flag_long(s, 12), set = lambda s,v: helpers.set_flag_long(s, v, 12))
+
+    # instances
+    fin_col = FloatVectorProperty(
+                                   name="Model color",
+                                   subtype='COLOR',
+                                   default=(1.0, 1.0, 1.0),
+                                   min=0.0, max=1.0,
+                                   description=""
+                                   )
+    fin_envcol = FloatVectorProperty(
+                                   name="Env Color",
+                                   subtype='COLOR',
+                                   default=(1.0, 1.0, 1.0, 1.0),
+                                   min=0.0, max=1.0,
+                                   description="Color of the EnvMap",
+                                   size=4
+                                   )
+    fin_priority = IntProperty(name="Priority")
+    fin_flag_env = BoolProperty(name="Use Environment Map", default=True)
+    fin_flag_hide = BoolProperty(name="Hide", default=False)
+    fin_flag_no_mirror = BoolProperty(name="Don't show in Mirror Mode", default=False)
+    fin_flag_no_lights = BoolProperty(name="Is affected by Light", default=False)
+    fin_flag_no_camera_coll = BoolProperty(name="No Camera Collision", default=False)
+    fin_flag_no_object_coll = BoolProperty(name="No Object Collision", default=False)
+    fin_lod_bias = IntProperty(name="LoD Bias")
+
     # these flags can be set for objects other than the mentioned type (export .w to ncp, export prm as part of .w)
     export_as_ncp = BoolProperty(name = "Additionally export as NCP (.ncp)")
     export_as_w = BoolProperty(name = "Additionally export as World (.w)")
@@ -153,7 +173,7 @@ def register():
     bpy.types.INFO_MT_file_import.append(menu_func_import_pos)
     bpy.types.INFO_MT_file_import.append(menu_func_import_fin)
     bpy.types.INFO_MT_file_import.append(menu_func_import_car)
-    
+
     bpy.types.INFO_MT_file_export.append(menu_func_export_prm)
     bpy.types.INFO_MT_file_export.append(menu_func_export_ncp)
     bpy.types.INFO_MT_file_export.append(menu_func_export_w)

@@ -152,7 +152,10 @@ def load_prm_file(file, matrix, texfile, rvtype=None):
     bm.free()
 
     # set new object type to mesh
-    ob.revolt.rv_type = "MESH"
+    if rvtype:
+        ob.revolt.rv_type = rvtype
+    else:
+        ob.revolt.rv_type = "MESH"
 
     # if it's a car, mark it to not use the texture number from level textures
     if texfile:

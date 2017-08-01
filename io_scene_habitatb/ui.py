@@ -228,6 +228,7 @@ class RevoltIOToolPanel(bpy.types.Panel):
         row.operator(io_ops.ImportNCP.bl_idname, text="NCP")
         row = box.row(align=True)
         row.operator(io_ops.ImportCAR.bl_idname, text="Car (parameters.txt)")
+        row.operator(io_ops.ImportFIN.bl_idname, text="FIN")
 
         box = self.layout.box()
         box.label(text="Export", icon="EXPORT")

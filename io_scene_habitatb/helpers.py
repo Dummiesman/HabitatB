@@ -16,6 +16,14 @@ import bmesh
 
 scale = 10.0
 
+def to_trans_matrix(matrix):
+    return mathutils.Matrix((
+        (matrix[0][0], matrix[2][0], -matrix[1][0], 0),
+        (matrix[0][2], matrix[2][2], -matrix[1][2], 0),
+        (-matrix[0][1], -matrix[2][1], matrix[1][1], 0),
+        (0, 0, 0, 1)
+        ))
+
 def get_distance(v1, v2):
     return math.sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2) + pow(v1.z - v2.z, 2))
 
