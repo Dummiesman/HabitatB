@@ -121,17 +121,18 @@ def load_prm_file(file, matrix, texfile):
             face[texture_layer] = texture
             if texfile:
                 face[texturefile_layer].image = texfile
-            else:
+            elif texture >= 0:
                 texture_name = path[-2].lower() + chr(97 + texture) + ".bmp"
                 image = bpy.data.images.get(texture_name)
+                # load image if it doesn't exist yet
                 if not image:
                     texture_path = os.sep.join([*path[:-1], texture_name])
                     if os.path.exists(texture_path):
                         image = bpy.data.images.load(texture_path)
                     else:
                         print("Texture not found: ", texture_path, "Number", texture)
-                face[texturefile_layer].image = image
 
+                face[texturefile_layer].image = image
 
             face.smooth = True
             face.normal_flip()
@@ -189,7 +190,6 @@ def load_texture(filepath):
         params = parameters.read_parameters(parampath)
         img = params["tpage"].split(os.sep)[-1]
         texture_path = os.sep.join([path, img])
-        print("TEXTURE PATH", texture_path)
         if os.path.isfile(texture_path):
             image = bpy.data.images.load(texture_path)
             image.use_fake_user = True
