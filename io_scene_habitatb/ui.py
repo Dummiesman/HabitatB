@@ -157,10 +157,10 @@ class RevoltVertexPanel(bpy.types.Panel):
             bm = bmesh.from_edit_mesh(mesh)
             vc_layer = bm.loops.layers.color.get("Col")
 
-            # update selection data
-            if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
-                self.selected_face_count = mesh.total_face_sel
-                self.selection = [face for face in bm.faces if face.select]
+            # # update selection data
+            # if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
+            #     self.selected_face_count = mesh.total_face_sel
+            #     self.selection = [face for face in bm.faces if face.select]
 
             if vc_layer is None:
                 row = self.layout.row()
@@ -168,10 +168,12 @@ class RevoltVertexPanel(bpy.types.Panel):
                 row = self.layout.row()
                 row.operator("vertexcolor.create_layer", icon='PLUS')
 
-            elif self.selection:
+            else:
                 row = self.layout.row()
                 row.operator("vertexcolor.set", text="Grey 50%").number=50
-                row.operator("vertexcolor.set", text="")
+                row.prop(context.object.revolt, 'vertex_color_picker', text = '')
+                row.template_color_picker(context.object.revolt, 'vertex_color_picker', value_slider=True)
+
                 row = self.layout.row()
                 col = row.column(align=True)
                 col.alignment = 'EXPAND'
@@ -437,7 +439,7 @@ class ButtonVertexColorSet(bpy.types.Operator):
     number = bpy.props.IntProperty()
 
     def execute(self, context):
-        helpers.set_vertex_color(context, self.number)
+        tools.set_vertex_color(context, self.number)
         return{'FINISHED'}
 
 class ButtonVertexColorCreateLayer(bpy.types.Operator):

@@ -132,31 +132,6 @@ def select_faces(context, prop):
             face.select = not face.select
     redraw()
 
-def set_vertex_color(context, number):
-    bm = bmesh.from_edit_mesh(context.object.data)
-    mesh = context.object.data
-    selmode = bpy.context.tool_settings.mesh_select_mode
-    if selmode[0]:
-        verts = [ v for v in bm.verts if v.select ]
-        if verts:
-            colors = bm.loops.layers.color.get("Col")
-            for v in verts:
-                for loop in v.link_loops:
-                    loop[colors] = mathutils.Color((number/100, number/100, number/100))
-
-            bmesh.update_edit_mesh(context.object.data)
-    elif selmode[2]:
-        colors = mesh.vertex_colors.active
-        faces = [f for f in mesh.polygons if f.select]
-        for f in faces:
-            for loop_index in f.loop_indices:
-                loop_vert_index = mesh.loops[loop_index].vertex_index
-                colors.data[loop_index].color = mathutils.Color((number/100, number/100, number/100))
-            else:
-                print("Empty sequence of verts.")
-    else:
-        print("No valid select mode.")
-
 def set_all_w(context):
     for obj in bpy.context.selected_objects:
         obj.revolt.rv_type = "WORLD"

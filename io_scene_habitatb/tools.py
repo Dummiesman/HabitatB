@@ -8,6 +8,40 @@
 # ##### END LICENSE BLOCK #####
 
 import bpy
+import bmesh
+import mathutils
+from math import pi
+
+def set_vertex_color(context, number):
+    bm = bmesh.from_edit_mesh(context.object.data)
+    mesh = context.object.data
+    selmode = bpy.context.tool_settings.mesh_select_mode
+    v_layer = bm.loops.layers.color.active
+
+    color = mathutils.Color((number/100, number/100, number/100))
+
+    # vertex select mode
+    if selmode[0]:
+        for face in bm.faces:
+            for loop in face.loops:
+                if loop.vert.select:
+                    loop[v_layer] = color
+                    continue # since multiple select modes can be set
+    # edge select mode
+    elif selmode[1]:
+        for face in bm.faces:
+            for i, loop in enumerate(face.loops):
+                if loop.edge.select or face.loops[i-1].edge.select:
+                    loop[v_layer] = color
+                    continue
+    # face select mode
+    elif selmode[2]:
+        for face in bm.faces:
+            if face.select:
+                for loop in face.loops:
+                    loop[v_layer] = color
+
+    bmesh.update_edit_mesh(mesh, tessface=False, destructive=False)
 
 def bake_shadow(self, context):
     # This will create a negative shadow (Re-Volt requires a neg. texture)

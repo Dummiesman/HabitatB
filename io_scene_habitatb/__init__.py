@@ -33,6 +33,7 @@ from bpy.props import (
         StringProperty,
         CollectionProperty,
         IntVectorProperty,
+        FloatVectorProperty,
         PointerProperty
         )
 from bpy_extras.io_utils import (
@@ -86,6 +87,13 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
     shadow_resolution = IntProperty(name = "Resolution", min=32, max=8192, default=128)
     shadow_softness = FloatProperty(name = "Softness", min=0.0, max=100.0, default=0.5)
     shadow_table = StringProperty(name = "Shadowtable", default="")
+    vertex_color_picker = FloatVectorProperty(
+                                   name="object_color",
+                                   subtype='COLOR',
+                                   default=(1.0, 1.0, 1.0),
+                                   min=0.0, max=1.0,
+                                   description="color picker"
+                                   )
 
 
 class RevoltMeshProperties(bpy.types.PropertyGroup):
