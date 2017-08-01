@@ -28,6 +28,7 @@ def bake_shadow(self, context):
     lamp_positive = bpy.data.objects.new(name="ShadePositive", object_data=lamp_data_pos)
 
     lamp_data_neg = bpy.data.lamps.new(name="ShadeNegative", type="SUN")
+    # create sun light (negative)
     lamp_data_neg.use_negative = True
     lamp_data_neg.shadow_method = "RAY_SHADOW"
     lamp_data_neg.shadow_ray_samples = quality
@@ -35,6 +36,7 @@ def bake_shadow(self, context):
     lamp_data_neg.shadow_soft_size = softness
     lamp_negative = bpy.data.objects.new(name="ShadeNegative", object_data=lamp_data_neg)
 
+    # link objects to the scene
     scene.objects.link(lamp_positive)
     scene.objects.link(lamp_negative)
 
@@ -45,6 +47,7 @@ def bake_shadow(self, context):
     print([ob.matrix_local for ob in all_objs])
 
     # get the bounds taking in account all child objects (wheels, etc.)
+    # using the world matrix here to get positions from child objects
     far_left = min([min([(ob.matrix_world[0][3] + ob.bound_box[i][0] * shade_obj.scale[0])  for i in range(0, 8)]) for ob in all_objs])
     far_right = max([max([(ob.matrix_world[0][3] + ob.bound_box[i][0] * shade_obj.scale[0])  for i in range(0, 8)]) for ob in all_objs])
     far_front = max([max([(ob.matrix_world[1][3] + ob.bound_box[i][1] * shade_obj.scale[1])  for i in range(0, 8)]) for ob in all_objs])
@@ -73,6 +76,7 @@ def bake_shadow(self, context):
     shadow_plane.scale[1] = scale/1.5
     print(shadow_plane.scale)
 
+    # unwrap the shadow plane
     for uv_face in context.object.data.uv_textures.active.data:
         uv_face.image = shadow_tex
 
@@ -101,3 +105,64 @@ def bake_shadow(self, context):
     sheight = (far_bottom - shade_obj.location[2]) * 100
     shtable = ";)SHADOWTABLE {:4f} {:4f} {:4f} {:4f} {:4f}".format(sleft, sright, sfront, sback, sheight)
     shade_obj.revolt.shadow_table = shtable
+
+def bake_vertex(self, context):
+    # Set scene to render to vertex color
+    rd = context.scene.render
+    rd.use_bake_to_vertex_color = True
+    rd.use_textures = False
+
+    shade_obj = context.object
+
+    scene = bpy.context.scene
+
+    if shade_obj.revolt.light1 != "None":
+        # Create new lamp datablock
+        lamp_data1 = bpy.data.lamps.new(name="ShadeLight1", type=shade_obj.revolt.light1)
+        # Create new object with our lamp datablock
+        lamp_object1 = bpy.data.objects.new(name="ShadeLight1", object_data=lamp_data1)
+        lamp_object1.data.energy = shade_obj.revolt.light_intensity1
+        # Link lamp object to the scene so it'll appear in this scene
+        scene.objects.link(lamp_object1)
+
+        # rotate light
+        if shade_obj.revolt.light_orientation == "X":
+            lamp_object1.location = (1.0, 0, 0)
+            lamp_object1.rotation_euler = (0, pi/2, 0)
+        elif shade_obj.revolt.light_orientation == "Y":
+            lamp_object1.location = (0, 1.0, 0)
+            lamp_object1.rotation_euler = (-pi/2, 0, 0)
+        elif shade_obj.revolt.light_orientation == "Z":
+            lamp_object1.location = (0, 0, 1.0)
+
+    if shade_obj.revolt.light2 != "None":
+        lamp_data2 = bpy.data.lamps.new(name="ShadeLight2", type=shade_obj.revolt.light2)
+        lamp_object2 = bpy.data.objects.new(name="ShadeLight2", object_data=lamp_data2)
+        lamp_object2.data.energy = shade_obj.revolt.light_intensity2
+        scene.objects.link(lamp_object2)
+
+        # rotate light
+        if shade_obj.revolt.light_orientation == "X":
+            lamp_object2.location = (-1.0, 0, 0)
+            lamp_object2.rotation_euler = (0, -pi/2, 0)
+        elif shade_obj.revolt.light_orientation == "Y":
+            lamp_object2.location = (0, -1.0, 0)
+            lamp_object2.rotation_euler = (pi/2, 0, 0)
+        elif shade_obj.revolt.light_orientation == "Z":
+            lamp_object2.location = (0, 0, -1.0)
+            lamp_object2.rotation_euler = (pi, 0, 0)
+
+    # bake the image
+    bpy.ops.object.bake_image()
+
+    # select lights and delete them
+    shade_obj.select = False
+    if shade_obj.revolt.light1 != "None":
+        lamp_object1.select = True
+    if shade_obj.revolt.light2 != "None":
+        lamp_object2.select = True
+    bpy.ops.object.delete()
+
+    # select the other object again
+    shade_obj.select = True
+    scene.objects.active = shade_obj

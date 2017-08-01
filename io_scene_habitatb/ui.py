@@ -468,65 +468,6 @@ class ButtonBakeLightToVertex(bpy.types.Operator):
     bl_idname = "lighttools.bakevertex"
     bl_label = "Bake light"
 
-
     def execute(self, context):
-        # Set scene to render to vertex color
-        rd = context.scene.render
-        rd.use_bake_to_vertex_color = True
-        rd.use_textures = False
-
-        shade_obj = context.object
-
-        scene = bpy.context.scene
-
-        if shade_obj.revolt.light1 != "None":
-            # Create new lamp datablock
-            lamp_data1 = bpy.data.lamps.new(name="ShadeLight1", type=shade_obj.revolt.light1)
-            # Create new object with our lamp datablock
-            lamp_object1 = bpy.data.objects.new(name="ShadeLight1", object_data=lamp_data1)
-            lamp_object1.data.energy = shade_obj.revolt.light_intensity1
-            # Link lamp object to the scene so it'll appear in this scene
-            scene.objects.link(lamp_object1)
-
-            if shade_obj.revolt.light_orientation == "X":
-                lamp_object1.location = (1.0, 0, 0)
-                lamp_object1.rotation_euler = (0, pi/2, 0)
-            elif shade_obj.revolt.light_orientation == "Y":
-                lamp_object1.location = (0, 1.0, 0)
-                lamp_object1.rotation_euler = (-pi/2, 0, 0)
-            elif shade_obj.revolt.light_orientation == "Z":
-                lamp_object1.location = (0, 0, 1.0)
-
-        if shade_obj.revolt.light2 != "None":
-            lamp_data2 = bpy.data.lamps.new(name="ShadeLight2", type=shade_obj.revolt.light2)
-            lamp_object2 = bpy.data.objects.new(name="ShadeLight2", object_data=lamp_data2)
-            lamp_object2.data.energy = shade_obj.revolt.light_intensity2
-            scene.objects.link(lamp_object2)
-
-            if shade_obj.revolt.light_orientation == "X":
-                lamp_object2.location = (-1.0, 0, 0)
-                lamp_object2.rotation_euler = (0, -pi/2, 0)
-            elif shade_obj.revolt.light_orientation == "Y":
-                lamp_object2.location = (0, -1.0, 0)
-                lamp_object2.rotation_euler = (pi/2, 0, 0)
-            elif shade_obj.revolt.light_orientation == "Z":
-                lamp_object2.location = (0, 0, -1.0)
-                lamp_object2.rotation_euler = (pi, 0, 0)
-
-        # bake the image
-        bpy.ops.object.bake_image()
-
-        # And finally select it and delete it
-        shade_obj.select = False
-        if shade_obj.revolt.light1 != "None":
-            lamp_object1.select = True
-        if shade_obj.revolt.light2 != "None":
-            lamp_object2.select = True
-        bpy.ops.object.delete()
-
-        # select the other object again
-        shade_obj.select = True
-        scene.objects.active = shade_obj
-
-
+        tools.bake_vertex(self, context)
         return{'FINISHED'}

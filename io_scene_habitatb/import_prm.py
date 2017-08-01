@@ -187,14 +187,15 @@ def load_texture(filepath):
     parampath = os.sep.join([path, "parameters.txt"])
     if os.path.exists(parampath):
         params = parameters.read_parameters(parampath)
-        if '/' in params["tpage"]:
-            img = params["tpage"].split("/")[-1]
-        elif '\\' in params["tpage"]:
-            img = params["tpage"].split("\\")[-1]
+        img = params["tpage"].split(os.sep)[-1]
         texture_path = os.sep.join([path, img])
-        image = bpy.data.images.load(texture_path)
-        image.use_fake_user = True
-        return image
+        print("TEXTURE PATH", texture_path)
+        if os.path.isfile(texture_path):
+            image = bpy.data.images.load(texture_path)
+            image.use_fake_user = True
+            return image
+        else:
+            return None
     else:
         return None
 
