@@ -17,8 +17,10 @@ def set_vertex_color(context, number):
     mesh = context.object.data
     selmode = bpy.context.tool_settings.mesh_select_mode
     v_layer = bm.loops.layers.color.active
-
-    color = mathutils.Color((number/100, number/100, number/100))
+    if number == -1:
+        color = context.object.revolt.vertex_color_picker
+    else:
+        color = mathutils.Color((number/100, number/100, number/100))
 
     # vertex select mode
     if selmode[0]:

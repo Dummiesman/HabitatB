@@ -169,11 +169,15 @@ class RevoltVertexPanel(bpy.types.Panel):
                 row.operator("vertexcolor.create_layer", icon='PLUS')
 
             else:
-                row = self.layout.row()
-                row.operator("vertexcolor.set", text="Grey 50%").number=50
-                row.prop(context.object.revolt, 'vertex_color_picker', text = '')
+                box = self.layout.box()
+                row = box.row()
                 row.template_color_picker(context.object.revolt, 'vertex_color_picker', value_slider=True)
 
+                row = box.row(align=True)
+                row.prop(context.object.revolt, 'vertex_color_picker', text = '')
+                row.operator("vertexcolor.set", text="Color").number=-1
+                row = self.layout.row(align=True)
+                row.operator("vertexcolor.set", text="Grey 50%").number=50
                 row = self.layout.row()
                 col = row.column(align=True)
                 col.alignment = 'EXPAND'
