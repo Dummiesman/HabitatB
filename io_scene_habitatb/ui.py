@@ -56,16 +56,32 @@ class RevoltTypePanel(bpy.types.Panel):
             self.layout.prop(context.object.revolt, "flag2_long", text="Setting 2")
             self.layout.prop(context.object.revolt, "flag3_long", text="Setting 3")
             self.layout.prop(context.object.revolt, "flag4_long", text="Setting 4")
-        self.layout.label(text="Additionally export as:")
+        if rvtype == "INSTANCE":
+            row = self.layout.row(align=True)
+            row.prop(context.object.revolt, "fin_flag_model_rgb", text="Model Color")
+            row.prop(context.object.revolt, "fin_col", text="")
+            row = self.layout.row(align=True)
+            row.prop(context.object.revolt, "fin_flag_env", text="EnvColor")
+            row.prop(context.object.revolt, "fin_envcol", text="")
+            self.layout.prop(context.object.revolt, "fin_flag_hide")
+            self.layout.prop(context.object.revolt, "fin_flag_no_mirror")
+            self.layout.prop(context.object.revolt, "fin_flag_no_lights")
+            self.layout.prop(context.object.revolt, "fin_flag_no_camera_coll")
+            self.layout.prop(context.object.revolt, "fin_flag_no_object_coll")
+            self.layout.prop(context.object.revolt, "fin_priority")
+            self.layout.prop(context.object.revolt, "fin_lod_bias")
+
+        box = self.layout.box()
+        box.label(text="Additionally export as:")
         # self.layout.prop(context.object.revolt, "export_as_prm") makes no sense to have
         if rvtype in ["OBJECT", "WORLD", "MESH", "NONE", "INSTANCE", "NCP"]:
-            self.layout.prop(context.object.revolt, "export_as_w", text="W (World)")
+            box.prop(context.object.revolt, "export_as_w", text="W (World)")
 
         if rvtype in ["OBJECT", "WORLD", "MESH", "NONE", "INSTANCE"]:
-            self.layout.prop(context.object.revolt, "export_as_ncp", text="NPC (Collision)")
+            box.prop(context.object.revolt, "export_as_ncp", text="NPC (Collision)")
 
-        self.layout.label(text="Other Properties:")
-        self.layout.prop(context.object.revolt, "use_tex_num")
+        box.label(text="Other Properties:")
+        box.prop(context.object.revolt, "use_tex_num")
 
 class RevoltFacePropertiesPanel(bpy.types.Panel):
     bl_label = "Face Properties"
@@ -227,8 +243,10 @@ class RevoltIOToolPanel(bpy.types.Panel):
         row.operator(io_ops.ImportW.bl_idname, text="W")
         row.operator(io_ops.ImportNCP.bl_idname, text="NCP")
         row = box.row(align=True)
-        row.operator(io_ops.ImportCAR.bl_idname, text="Car (parameters.txt)")
+        row.operator(io_ops.ImportPOS.bl_idname, text="POS")
         row.operator(io_ops.ImportFIN.bl_idname, text="FIN")
+        row = box.row(align=True)
+        row.operator(io_ops.ImportCAR.bl_idname, text="Car (parameters.txt)")
 
         box = self.layout.box()
         box.label(text="Export", icon="EXPORT")

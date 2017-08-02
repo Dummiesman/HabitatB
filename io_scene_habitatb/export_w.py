@@ -25,7 +25,7 @@ def save_w_file(file, matrix):
 
     export_objs = []
     for obj in scn.objects:
-        if obj.revolt.rv_type == "WORLD" or obj.revolt.export_as_w == True:
+        if obj.data and (obj.revolt.rv_type == "WORLD" or obj.revolt.export_as_w == True):
             export_objs.append(obj)
 
     # write the amount of meshes

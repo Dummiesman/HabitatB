@@ -35,9 +35,9 @@ def load_fin_file(filepath, matrix):
         prm_name = str(prm_name, encoding='ascii').split('\x00', 1)[0]
 
         # get the model color
-        red, green, blue = struct.unpack('<3B', file.read(3))
+        red_col, green_col, blue_col = struct.unpack('<3B', file.read(3))
         # get the env color of the instance
-        blue, green, red, alpha = struct.unpack('<BBBB', file.read(4))
+        blue_env, green_env, red_env, alpha_env = struct.unpack('<BBBB', file.read(4))
 
         # other props
         priority, flag = struct.unpack('<BBxx', file.read(4))
@@ -54,13 +54,28 @@ def load_fin_file(filepath, matrix):
                 prm_fname = fl
                 break
 
-        # check if it actually es
+        # check if it actually exists
         if prm_fname in os.listdir(folder):
-            infstance_path = os.sep.join([folder, prm_fname])
-            import_prm.load_prm(infstance_path, context, matrix, rvtype="INSTANCE")
+            try:
+                infstance_path = os.sep.join([folder, prm_fname])
+                import_prm.load_prm(infstance_path, context, matrix, rvtype="INSTANCE")
 
-            context.object.matrix_world = helpers.to_trans_matrix(rot_matrix)
-            context.object.location = pos*matrix
+                imported_obj = context.object
+                imported_obj.matrix_world = helpers.to_trans_matrix(rot_matrix)
+                imported_obj.location = pos*matrix
+                imported_obj.revolt.fin_priority = priority
+                imported_obj.revolt.fin_lod_bias = lod_bias
+                imported_obj.revolt.fin_col = (red_col, green_col, blue_col)
+                imported_obj.revolt.fin_envcol = (red_env, green_env, blue_env, 1-alpha_env)
+
+                imported_obj.revolt.fin_flag_env = bool(flag & const.FIN_ENV)
+                imported_obj.revolt.fin_flag_hide = bool(flag & const.FIN_HIDE)
+                imported_obj.revolt.fin_flag_no_mirror = bool(flag & const.FIN_NO_MIRROR)
+                imported_obj.revolt.fin_flag_no_lights = bool(flag & const.FIN_NO_LIGHTS)
+                imported_obj.revolt.fin_flag_no_camera_coll = bool(flag & const.FIN_NO_OBJECT_COLLISION)
+                imported_obj.revolt.fin_flag_no_object_coll = bool(flag & const.FIN_NO_CAMERA_COLLISION)
+            except:
+                print("Import of {} failed.".format(prm_fname))
         else:
             print("Could not find", prm_name)
 

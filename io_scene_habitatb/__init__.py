@@ -84,14 +84,15 @@ class RevoltObjectProperties(bpy.types.PropertyGroup):
                                    description="Color of the EnvMap",
                                    size=4
                                    )
-    fin_priority = IntProperty(name="Priority")
+    fin_priority = IntProperty(name="Priority", default=1)
     fin_flag_env = BoolProperty(name="Use Environment Map", default=True)
+    fin_flag_model_rgb = BoolProperty(name="Use Model Color", default=False)
     fin_flag_hide = BoolProperty(name="Hide", default=False)
     fin_flag_no_mirror = BoolProperty(name="Don't show in Mirror Mode", default=False)
     fin_flag_no_lights = BoolProperty(name="Is affected by Light", default=False)
     fin_flag_no_camera_coll = BoolProperty(name="No Camera Collision", default=False)
     fin_flag_no_object_coll = BoolProperty(name="No Object Collision", default=False)
-    fin_lod_bias = IntProperty(name="LoD Bias")
+    fin_lod_bias = IntProperty(name="LoD Bias", default = 1024)
 
     # these flags can be set for objects other than the mentioned type (export .w to ncp, export prm as part of .w)
     export_as_ncp = BoolProperty(name = "Additionally export as NCP (.ncp)")
