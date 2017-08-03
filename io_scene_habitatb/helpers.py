@@ -16,6 +16,42 @@ import bmesh
 
 scale = 10.0
 
+class DialogOperator(bpy.types.Operator):
+    bl_idname = 'habitat.dialog'
+    bl_label = 'Oh noes!'
+
+    def execute(self, context):
+        return {
+         'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        global dialog_message
+        column = self.layout.column()
+        for line in str.split(dialog_message, '\n'):
+            column.label(line)
+
+def msg_box(message):
+    global dialog_message
+    print(message)
+    dialog_message = message
+    bpy.ops.habitat.dialog('INVOKE_DEFAULT')
+    dialog_message = ''
+
+
+def get_object_types(context):
+    types = []
+    for obj in context.scene.objects:
+        types.append(obj.revolt.rv_type)
+        if obj.revolt.export_as_ncp:
+            types.append("NCP")
+        if obj.revolt.export_as_w:
+            types.append("WORLD")
+    return types
+
 def to_trans_matrix(matrix):
     return mathutils.Matrix((
         (matrix[0][0], matrix[2][0], -matrix[1][0], 0),
@@ -173,3 +209,21 @@ def create_alpha_layer(context):
     obj = context.object
     bm = bmesh.from_edit_mesh(obj.data)
     bm.loops.layers.color.new("Alpha")
+
+
+def enable_texture_mode():
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            for space in area.spaces:
+                if space.type == 'VIEW_3D':
+                    space.viewport_shade = 'TEXTURED'
+    return
+
+def texture_mode_enabled():
+    for area in bpy.context.screen.areas: # iterate through areas in current screen
+        if area.type == 'VIEW_3D':
+            for space in area.spaces: # iterate through spaces in current VIEW_3D area
+                if space.type == 'VIEW_3D': # check if space is a 3D view
+                    if space.viewport_shade == 'TEXTURED':
+                        return True
+    return False

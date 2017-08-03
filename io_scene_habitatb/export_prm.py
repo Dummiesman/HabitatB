@@ -20,6 +20,7 @@ from . import helpers, const
 ######################################################
 
 def save_prm_file(file, ob, matrix):
+
     scn = bpy.context.scene
 
     # get mesh name
@@ -135,6 +136,10 @@ def save_prm(filepath, context, matrix):
 def save(operator, filepath, context, matrix):
 
     # save PRM file
-    save_prm(filepath, context, matrix)
+
+    if context.object:
+        save_prm(filepath, context, matrix)
+    else:
+        helpers.msg_box(const.STR_NO_SEL)
 
     return {'FINISHED'}

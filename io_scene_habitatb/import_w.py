@@ -12,7 +12,7 @@ import bpy, struct, bmesh, re, os, glob
 import time, struct
 import mathutils
 from mathutils import Vector, Color
-from . import const
+from . import const, helpers
 
 export_filename = None
 
@@ -194,5 +194,7 @@ def load(operator, filepath, context, matrix):
     export_filename = filepath
 
     load_w(filepath, context, matrix)
+
+    helpers.enable_texture_mode()
 
     return {'FINISHED'}

@@ -21,10 +21,16 @@ export_filename = None
 # IMPORT MAIN FILES
 ######################################################
 def load_fin_file(filepath, matrix):
+    fails = [] # failed import names
     file = open(filepath, 'rb')
     scn = bpy.context.scene
     context = bpy.context
     folder = os.sep.join(filepath.split(os.sep)[:-1])
+
+    context.space_data.show_relationship_lines = False
+
+    fin_parent = bpy.data.objects.new(name=filepath.split(os.sep)[-1], object_data=None)
+    bpy.context.scene.objects.link(fin_parent)
 
     # read header
     instance_count = struct.unpack('<L', file.read(4))[0]
@@ -54,30 +60,40 @@ def load_fin_file(filepath, matrix):
                 prm_fname = fl
                 break
 
-        # check if it actually exists
-        if prm_fname in os.listdir(folder):
+        imported_obj = None
+        if prm_fname in [ob.name for ob in context.scene.objects]:
+            ob_data = context.scene.objects[prm_fname].data
+            imported_obj = bpy.data.objects.new(name=prm_fname, object_data=ob_data)
+            bpy.context.scene.objects.link(imported_obj)
+        elif prm_fname in os.listdir(folder):
             try:
-                infstance_path = os.sep.join([folder, prm_fname])
-                import_prm.load_prm(infstance_path, context, matrix, rvtype="INSTANCE")
-
+                instance_path = os.sep.join([folder, prm_fname])
+                import_prm.load_prm(instance_path, context, matrix, rvtype="INSTANCE")
                 imported_obj = context.object
-                imported_obj.matrix_world = helpers.to_trans_matrix(rot_matrix)
-                imported_obj.location = pos*matrix
-                imported_obj.revolt.fin_priority = priority
-                imported_obj.revolt.fin_lod_bias = lod_bias
-                imported_obj.revolt.fin_col = (red_col, green_col, blue_col)
-                imported_obj.revolt.fin_envcol = (red_env, green_env, blue_env, 1-alpha_env)
-
-                imported_obj.revolt.fin_flag_env = bool(flag & const.FIN_ENV)
-                imported_obj.revolt.fin_flag_hide = bool(flag & const.FIN_HIDE)
-                imported_obj.revolt.fin_flag_no_mirror = bool(flag & const.FIN_NO_MIRROR)
-                imported_obj.revolt.fin_flag_no_lights = bool(flag & const.FIN_NO_LIGHTS)
-                imported_obj.revolt.fin_flag_no_camera_coll = bool(flag & const.FIN_NO_OBJECT_COLLISION)
-                imported_obj.revolt.fin_flag_no_object_coll = bool(flag & const.FIN_NO_CAMERA_COLLISION)
             except:
                 print("Import of {} failed.".format(prm_fname))
+                fails.append(prm_fname)
         else:
             print("Could not find", prm_name)
+
+        if imported_obj:
+            imported_obj.matrix_world = helpers.to_trans_matrix(rot_matrix)
+            imported_obj.location = pos*matrix
+            imported_obj.revolt.fin_priority = priority
+            imported_obj.revolt.fin_lod_bias = lod_bias
+            imported_obj.revolt.fin_col = (red_col, green_col, blue_col)
+            imported_obj.revolt.fin_envcol = (red_env, green_env, blue_env, 1-alpha_env)
+
+            imported_obj.revolt.fin_flag_env = bool(flag & const.FIN_ENV)
+            imported_obj.revolt.fin_flag_hide = bool(flag & const.FIN_HIDE)
+            imported_obj.revolt.fin_flag_no_mirror = bool(flag & const.FIN_NO_MIRROR)
+            imported_obj.revolt.fin_flag_no_lights = bool(flag & const.FIN_NO_LIGHTS)
+            imported_obj.revolt.fin_flag_no_camera_coll = bool(flag & const.FIN_NO_OBJECT_COLLISION)
+            imported_obj.revolt.fin_flag_no_object_coll = bool(flag & const.FIN_NO_CAMERA_COLLISION)
+            imported_obj.parent = fin_parent
+    if fails:
+        helpers.msg_box("The following instances could not be imported:{}".format(
+                        *["\n"+fail for fail in fails]))
 
 
 ######################################################
@@ -89,13 +105,10 @@ def load_fin(filepath, context, matrix):
 
     time1 = time.clock()
 
-
     # start reading the fin file
     load_fin_file(filepath, matrix)
 
     print(" done in %.4f sec." % (time.clock() - time1))
-
-
 
 def load(operator, filepath, context, matrix):
 

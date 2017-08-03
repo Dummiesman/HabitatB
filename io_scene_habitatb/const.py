@@ -111,3 +111,7 @@ shadow_methods = [
     ("ADAPTIVE_QMC", "Default (fast)", "", 0),
     ("CONSTANT_QMC", "High Quality (slow)", "", 1)
 ]
+
+STR_NO_NCP = "Export unsuccessful: No NCP objects in scene.\nPlease assign the NCP type to at least one object first."
+STR_NO_SEL = "Export unsuccessful: No object selected.\nPlease select an object first."
+STR_NO_W = "Export unsuccessful: No WORLD objects in scene.\nPlease assign the WORLD type to at least one object first."

@@ -175,6 +175,10 @@ def save_w(filepath, context, matrix):
 def save(operator, filepath, context, matrix):
 
     # save PRM file
-    save_w(filepath, context, matrix)
+    if "WORLD" in helpers.get_object_types(context):
+        save_w(filepath, context, matrix)
+    else:
+        helpers.msg_box(const.STR_NO_W)
+
 
     return {'FINISHED'}
