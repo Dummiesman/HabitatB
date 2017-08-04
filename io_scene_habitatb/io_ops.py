@@ -23,7 +23,7 @@ from bpy.props import (
 
 
 class ImportPRM(bpy.types.Operator, ImportHelper):
-    """Import from PRM file format (.prm, .m)"""
+    """Import Re-Volt Mesh (.prm, .m)"""
     bl_idname = "import_scene.prm"
     bl_label = 'Import PRM'
     bl_options = {'UNDO'}
@@ -50,7 +50,7 @@ class ImportPRM(bpy.types.Operator, ImportHelper):
                             to_forward = self.forward_axis).to_4x4() * self.scale)
 
 class ImportW(bpy.types.Operator, ImportHelper):
-    """Import from W file format (.w)"""
+    """Import Re-Volt World (.w)"""
     bl_idname = "import_scene.w"
     bl_label = 'Import W'
     bl_options = {'UNDO'}
@@ -76,7 +76,7 @@ class ImportW(bpy.types.Operator, ImportHelper):
                             to_forward = self.forward_axis).to_4x4() * self.scale)
 
 class ImportNCP(bpy.types.Operator, ImportHelper):
-    """Import from NCP file format (.ncp)"""
+    """Import Re-Volt Collision (.ncp)"""
     bl_idname = "import_scene.ncp"
     bl_label = 'Import NCP'
     bl_options = {'UNDO'}
@@ -102,7 +102,7 @@ class ImportNCP(bpy.types.Operator, ImportHelper):
                             to_forward = self.forward_axis).to_4x4() * self.scale)
 
 class ImportPOS(bpy.types.Operator, ImportHelper):
-    """Import from POS file format (.pan)"""
+    """Import Re-Volt POS Nodes (.pan)"""
     bl_idname = "import_scene.pan"
     bl_label = 'Import POS'
     bl_options = {'UNDO'}
@@ -128,7 +128,7 @@ class ImportPOS(bpy.types.Operator, ImportHelper):
                             to_forward = self.forward_axis).to_4x4() * self.scale)
 
 class ImportFIN(bpy.types.Operator, ImportHelper):
-    """Import from FIN file format (.fin)"""
+    """Import Re-Volt instances (.fin)"""
     bl_idname = "import_scene.fin"
     bl_label = 'Import FIN'
     bl_options = {'UNDO'}
@@ -183,7 +183,7 @@ class ImportCAR(bpy.types.Operator, ImportHelper):
 
 
 class ExportPRM(bpy.types.Operator, ExportHelper):
-    """Export to PRM file format (.prm, .m)"""
+    """Export object as Re-Volt Mesh (.prm, .m)"""
     bl_idname = "export_scene.prm"
     bl_label = 'Export PRM'
 
@@ -208,7 +208,7 @@ class ExportPRM(bpy.types.Operator, ExportHelper):
                             from_forward = self.forward_axis).to_4x4() * (1 / self.scale))
 
 class ExportW(bpy.types.Operator, ExportHelper):
-    """Export to W file format (.w)"""
+    """Export Re-Volt World (.w)"""
     bl_idname = "export_scene.w"
     bl_label = 'Export W'
 
@@ -234,7 +234,7 @@ class ExportW(bpy.types.Operator, ExportHelper):
 
 
 class ExportNCP(bpy.types.Operator, ExportHelper):
-    """Export to NCP file format (.ncp)"""
+    """Export Re-Volt Collision (.ncp)"""
     bl_idname = "export_scene.ncp"
     bl_label = 'Export NCP'
 
@@ -257,3 +257,28 @@ class ExportNCP(bpy.types.Operator, ExportHelper):
             self.properties.filepath,
             context,
             axis_conversion(from_up = self.up_axis, from_forward = self.forward_axis).to_4x4() * (1 / self.scale))
+
+class ExportFIN(bpy.types.Operator, ExportHelper):
+    """Export Re-Volt instances (.fin)"""
+    bl_idname = "export_scene.prm"
+    bl_label = 'Export FIN'
+
+    filename_ext = ""
+    filter_glob = StringProperty(
+            default="*.fin",
+            options={'HIDDEN'},
+            )
+
+    scale = FloatProperty(default=0.01, name = "Scale", min = 0.0005, max = 1, step = 0.01)
+    up_axis = EnumProperty(default = "-Y", name = "Up axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+    forward_axis = EnumProperty(default = "Z", name = "Forward axis", items = (("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z"), ("-X", "-X", "-X"), ("-Y", "-Y", "-Y"), ("-Z", "-Z", "-Z")))
+
+    def execute(self, context):
+        from . import export_fin
+
+        return export_fin.save(
+            self,
+            self.properties.filepath,
+            context,
+            axis_conversion(from_up = self.up_axis,
+                            from_forward = self.forward_axis).to_4x4() * (1 / self.scale))

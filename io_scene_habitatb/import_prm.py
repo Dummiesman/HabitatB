@@ -209,6 +209,6 @@ def load(operator, filepath, context, matrix):
 
     load_prm(filepath, context, matrix)
 
-    helpers.set_texture_mode()
+    helpers.enable_texture_mode()
 
     return {'FINISHED'}

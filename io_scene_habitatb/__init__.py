@@ -157,9 +157,13 @@ def menu_func_export_w(self, context):
 # POS
 def menu_func_import_pos(self, context):
     self.layout.operator(io_ops.ImportPOS.bl_idname, text="Re-Volt Position Nodes (.pan)")
-# INF
+
+# FIN
 def menu_func_import_fin(self, context):
     self.layout.operator(io_ops.ImportFIN.bl_idname, text="Re-Volt Instances (.fin)")
+
+def menu_func_export_fin(self, context):
+    self.layout.operator(io_ops.ExportFIN.bl_idname, text="Re-Volt Instances (.fin)")
 
 # CAR
 def menu_func_import_car(self, context):
@@ -178,6 +182,7 @@ def register():
     bpy.types.INFO_MT_file_export.append(menu_func_export_prm)
     bpy.types.INFO_MT_file_export.append(menu_func_export_ncp)
     bpy.types.INFO_MT_file_export.append(menu_func_export_w)
+    bpy.types.INFO_MT_file_export.append(menu_func_export_fin)
 
     #bpy.types.Scene.ui_properties = bpy.props.PointerProperty(type=ui.UIProperties)
 
@@ -197,6 +202,7 @@ def unregister():
     bpy.types.INFO_MT_file_export.remove(menu_func_export_ncp)
     bpy.types.INFO_MT_file_export.remove(menu_func_export_w)
     bpy.types.INFO_MT_file_export.remove(menu_func_export_prm)
+    bpy.types.INFO_MT_file_export.remove(menu_func_export_fin)
 
     # del bpy.types.Scene.ui_properties
 

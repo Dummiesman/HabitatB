@@ -263,6 +263,13 @@ class RevoltIOToolPanel(bpy.types.Panel):
         else:
             row.operator(io_ops.ExportNCP.bl_idname, text="NCP", icon="X")
 
+        row = box.row(align=True)
+
+        if "INSTANCE" in types:
+            row.operator(io_ops.ExportFIN.bl_idname, text="FIN")
+        else:
+            row.operator(io_ops.ExportFIN.bl_idname, text="FIN", icon="X")
+
 """
 Tools for batch-setting common objects types and properties.
 This is only visible in object mode (left tools panel).

@@ -21,8 +21,8 @@ from . import helpers, const
 # EXPORT MAIN FILES
 ######################################################
 
-def save_ncp_file(file, ob, matrix):
-    scn = bpy.context.scene
+def save_ncp_file(file, context, matrix):
+    scn = context.scene
 
     bm = bmesh.new() # big mesh for all ncp objects
 
@@ -34,9 +34,9 @@ def save_ncp_file(file, ob, matrix):
             bmtemp.from_mesh(obj.data) # fill temp mesh with object data
 
             # apply scale, position and rotation
-            bmesh.ops.scale(bm, vec=ob.scale, space=ob.matrix_basis, verts=bm.verts)
-            bmesh.ops.transform(bm, matrix=Matrix.Translation(ob.location), space=ob.matrix_world, verts=bm.verts)
-            bmesh.ops.rotate(bm, cent=ob.location, matrix=ob.rotation_euler.to_matrix(), space=ob.matrix_world, verts=bm.verts)
+            bmesh.ops.scale(bmtemp, vec=obj.scale, space=obj.matrix_basis, verts=bmtemp.verts)
+            bmesh.ops.transform(bmtemp, matrix=Matrix.Translation(obj.location), space=obj.matrix_world, verts=bmtemp.verts)
+            bmesh.ops.rotate(bmtemp, cent=obj.location, matrix=obj.rotation_euler.to_matrix(), space=obj.matrix_world, verts=bmtemp.verts)
 
             bmtemp.to_mesh(tempmesh) # save temp bmesh into mesh
             bmtemp.free()
@@ -118,12 +118,11 @@ def save_ncp(filepath, context, matrix):
 
     time1 = time.clock()
 
-    ob = bpy.context.active_object
-    print("exporting ncp: {} as {}...".format(str(ob), filepath))
+    print("exporting ncp: ...".format(filepath))
 
     # write the actual data
     file = open(filepath, 'wb')
-    save_ncp_file(file, ob, matrix)
+    save_ncp_file(file, context, matrix)
     file.close()
 
     # ncp export complete

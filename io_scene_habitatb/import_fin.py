@@ -117,4 +117,6 @@ def load(operator, filepath, context, matrix):
 
     load_fin(filepath, context, matrix)
 
+    helpers.enable_texture_mode()
+
     return {'FINISHED'}

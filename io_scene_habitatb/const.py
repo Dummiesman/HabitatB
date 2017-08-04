@@ -113,5 +113,6 @@ shadow_methods = [
 ]
 
 STR_NO_NCP = "Export unsuccessful: No NCP objects in scene.\nPlease assign the NCP type to at least one object first."
+STR_NO_FIN = "Export unsuccessful: No Instance objects in scene.\nPlease assign the Instance type to at least one object first."
 STR_NO_SEL = "Export unsuccessful: No object selected.\nPlease select an object first."
 STR_NO_W = "Export unsuccessful: No WORLD objects in scene.\nPlease assign the WORLD type to at least one object first."
