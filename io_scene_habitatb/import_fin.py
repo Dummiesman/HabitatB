@@ -43,7 +43,7 @@ def load_fin_file(filepath, matrix):
         # get the model color
         red_col, green_col, blue_col = struct.unpack('<3B', file.read(3))
         # get the env color of the instance
-        blue_env, green_env, red_env, alpha_env = struct.unpack('<BBBB', file.read(4))
+        blue_env, green_env, red_env, alpha_env = struct.unpack('<4B', file.read(4))
 
         # other props
         priority, flag = struct.unpack('<BBxx', file.read(4))
@@ -64,6 +64,7 @@ def load_fin_file(filepath, matrix):
         if prm_fname in [ob.name for ob in context.scene.objects]:
             ob_data = context.scene.objects[prm_fname].data
             imported_obj = bpy.data.objects.new(name=prm_fname, object_data=ob_data)
+            imported_obj.revolt.rv_type = "INSTANCE"
             bpy.context.scene.objects.link(imported_obj)
         elif prm_fname in os.listdir(folder):
             try:
@@ -81,8 +82,8 @@ def load_fin_file(filepath, matrix):
             imported_obj.location = pos*matrix
             imported_obj.revolt.fin_priority = priority
             imported_obj.revolt.fin_lod_bias = lod_bias
-            imported_obj.revolt.fin_col = (red_col, green_col, blue_col)
-            imported_obj.revolt.fin_envcol = (red_env, green_env, blue_env, 1-alpha_env)
+            imported_obj.revolt.fin_col = (red_col / 255, green_col / 255, blue_col / 255)
+            imported_obj.revolt.fin_envcol = (red_env / 255, green_env / 255, blue_env / 255, 1-alpha_env / 255)
 
             imported_obj.revolt.fin_flag_env = bool(flag & const.FIN_ENV)
             imported_obj.revolt.fin_flag_hide = bool(flag & const.FIN_HIDE)

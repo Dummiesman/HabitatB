@@ -52,13 +52,28 @@ def get_object_types(context):
             types.append("WORLD")
     return types
 
+# takes a matrix from RV and converts it to blender
+# this should take the matrix set in the export/import operator into account
+# out of laziness, it doesn't yet.
 def to_trans_matrix(matrix):
     return mathutils.Matrix((
-        (matrix[0][0], matrix[2][0], -matrix[1][0], 0),
-        (matrix[0][2], matrix[2][2], -matrix[1][2], 0),
-        (-matrix[0][1], -matrix[2][1], matrix[1][1], 0),
+        ( matrix[0][0],  matrix[2][0], -matrix[1][0], 0),
+        ( matrix[0][2],  matrix[2][2], -matrix[1][2], 0),
+        (-matrix[0][1], -matrix[2][1],  matrix[1][1], 0),
         (0, 0, 0, 1)
         ))
+
+# gets the position from a transformation matrix. useful to get the
+# actual location of child objects.
+def get_pos_from_matrix(matrix):
+    return (matrix[0][3], matrix[1][3], matrix[2][3])
+
+# returns the rotation matrix used in instances, given the world matrix of an object
+# multiply by RV matrix first
+def get_rot_matrix(matrix):
+    return (  matrix[0][0], -matrix[2][0],  matrix[1][0],
+             -matrix[0][2],  matrix[2][2], -matrix[1][2],
+              matrix[0][1], -matrix[2][1],  matrix[1][1])
 
 def get_distance(v1, v2):
     return math.sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2) + pow(v1.z - v2.z, 2))
@@ -74,6 +89,7 @@ def texture_to_int(string):
         return -1
     else:
         return num
+
 
 def get_face_material(self):
     bm = bmesh.from_edit_mesh(bpy.context.object.data)

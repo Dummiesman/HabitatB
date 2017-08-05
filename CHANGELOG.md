@@ -47,3 +47,7 @@
 ## 2017-08-03
 + Finalized instance import, meshes are linked duplicates now.
 + Added some message boxes to notify user if import/export went wrong
+
+## 2017-08-05
++ Added instance export (.fin)
++ fixed instance import (colors)

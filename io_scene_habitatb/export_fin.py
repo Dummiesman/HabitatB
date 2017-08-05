@@ -29,42 +29,62 @@ def save_fin_file(file, context, matrix):
         if obj.revolt.rv_type == "INSTANCE":
             instances.append(obj)
 
-    file.write(struct.pack(len(instances), "<L"))
+    # write the number of instances
+    file.write(struct.pack("<L", len(instances)))
+    print("Exporting", len(instances), "instances.")
 
     for instance in instances:
-        name = os.path.splitext(ob.data.name)[0][:9 - 1].upper()
-        matrix = ob.matrix_world * matrix
-        pos = ob.location * matrix # get from matrix_w
+
+        # prepare the name. only the first 9 letters are stored in upper case
+        name = path.splitext(instance.data.name)[0][:9 - 1].upper()
+
+        # get the rotation matrix
+        rot_matrix = instance.matrix_world
+        rot_matrix = helpers.get_rot_matrix(rot_matrix)
+
+        # get the position from the world matrix (takes child transl. into account)
+        pos = Vector(helpers.get_pos_from_matrix(instance.matrix_world)) * matrix
         flag = 0
-        col_red, col_green, col_blue = ob.revolt.fin_col
-        env_red, env_green, env_blue, env_alpha = ob.revolt.fin_envcol
-        priority = ob.revolt.fin_priority
-        if ob.revolt.fin_flag_env:
-            flag |= INSTANCE_ENV
-        if ob.revolt.fin_flag_hide:
-            flag |= INSTANCE_HIDE
-        if ob.revolt.fin_flag_no_mirror:
-            flag |= INSTANCE_NO_MIRROR
-        if ob.revolt.fin_flag_no_lights:
-            flag |= INSTANCE_NO_LIGHTS
-        if ob.revolt.fin_flag_no_object_coll:
-            flag |= INSTANCE_NO_OBJECT_COLLISION
-        if ob.revolt.fin_flag_no_camera_coll:
-            flag |= INSTANCE_NO_CAMERA_COLLISION
-        if ob.revolt.fin_flag_model_rgb:
-            flag |= INSTANCE_SET_MODEL_RGB
-        lod_bias = ob.revolt.fin_lod_bias
+        col_red = int(instance.revolt.fin_col[0] * 255)
+        col_green = int(instance.revolt.fin_col[1] * 255)
+        col_blue = int(instance.revolt.fin_col[2] * 255)
 
+        env_red = int(instance.revolt.fin_envcol[0] * 255)
+        env_green = int(instance.revolt.fin_envcol[1] * 255)
+        env_blue = int(instance.revolt.fin_envcol[2] * 255)
+        env_alpha = int((1-instance.revolt.fin_envcol[3]) * 255)
+
+        priority = instance.revolt.fin_priority
+
+        # apply the flags
+        if instance.revolt.fin_flag_env:
+            flag |= const.FIN_ENV
+        if instance.revolt.fin_flag_hide:
+            flag |= const.FIN_HIDE
+        if instance.revolt.fin_flag_no_mirror:
+            flag |= const.FIN_NO_MIRROR
+        if instance.revolt.fin_flag_no_lights:
+            flag |= const.FIN_NO_LIGHTS
+        if instance.revolt.fin_flag_no_object_coll:
+            flag |= const.FIN_NO_OBJECT_COLLISION
+        if instance.revolt.fin_flag_no_camera_coll:
+            flag |= const.FIN_NO_CAMERA_COLLISION
+        if instance.revolt.fin_flag_model_rgb:
+            flag |= const.FIN_SET_MODEL_RGB
+        lod_bias = instance.revolt.fin_lod_bias
+
+        # write the file
         name = str.encode(name)
-        file.write(struct.pack('<9s', name))
-        file.write(struct.pack('<3B', red, green, blue))
-        env_rgb.write_data(file)
-        file.write(struct.pack('<BBxx', priority, flag))
-        file.write(struct.pack('<f', lod_bias))
-        file.write(struct.pack('<fff', pos[0]))
-        matrix.write_data(file)
+        file.write(struct.pack("<9s", name))
+        file.write(struct.pack("<3B", col_red, col_green, col_blue))
+        file.write(struct.pack("<4B", env_red, env_green, env_blue, env_alpha))
 
-    print("Exporting", len(instances), "instances.")
+        # writ the priority and the flag with padding
+        file.write(struct.pack("<BBxx", priority, flag))
+        file.write(struct.pack("<f", lod_bias))
+        file.write(struct.pack("<3f", *pos))
+        file.write(struct.pack("<9f", *rot_matrix))
+
 
 
 ######################################################
@@ -78,7 +98,7 @@ def save_fin(filepath, context, matrix):
     print("exporting FIN: {}...".format(filepath))
 
     # write the actual data
-    file = open(filepath, 'wb')
+    file = open(filepath, "wb")
     save_fin_file(file, context, matrix)
     file.close()
 
@@ -96,4 +116,4 @@ def save(operator, filepath, context, matrix):
         helpers.msg_box(const.STR_NO_FIN)
 
 
-    return {'FINISHED'}
+    return {"FINISHED"}
