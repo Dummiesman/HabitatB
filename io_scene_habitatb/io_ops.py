@@ -260,7 +260,7 @@ class ExportNCP(bpy.types.Operator, ExportHelper):
 
 class ExportFIN(bpy.types.Operator, ExportHelper):
     """Export Re-Volt instances (.fin)"""
-    bl_idname = "export_scene.prm"
+    bl_idname = "export_scene.fin"
     bl_label = 'Export FIN'
 
     filename_ext = ""
