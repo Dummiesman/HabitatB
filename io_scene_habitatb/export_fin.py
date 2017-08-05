@@ -36,7 +36,7 @@ def save_fin_file(file, context, matrix):
     for instance in instances:
 
         # prepare the name. only the first 9 letters are stored in upper case
-        name = path.splitext(instance.data.name)[0][:9 - 1].upper()
+        name = instance.name.split(".")[0]
 
         # get the rotation matrix
         rot_matrix = instance.matrix_world
