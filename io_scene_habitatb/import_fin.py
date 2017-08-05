@@ -39,6 +39,7 @@ def load_fin_file(filepath, matrix):
         # get the file name of the instance
         prm_name = struct.unpack('<9s', file.read(9))[0]
         prm_name = str(prm_name, encoding='ascii').split('\x00', 1)[0]
+        print("Importing instance {} of {}: {}".format(instance+1, instance_count, prm_name))
 
         # get the model color
         red_col, green_col, blue_col = struct.unpack('<3B', file.read(3))
@@ -56,7 +57,7 @@ def load_fin_file(filepath, matrix):
         # find correct file if prm name is too long
         prm_fname = None
         for fl in os.listdir(folder):
-            if prm_name.lower() in fl[:9].lower() and ".prm" in fl:
+            if prm_name.lower() == fl.split(".")[0][:8].lower() and ".prm" in fl:
                 prm_fname = fl
                 break
 
@@ -72,10 +73,11 @@ def load_fin_file(filepath, matrix):
                 import_prm.load_prm(instance_path, context, matrix, rvtype="INSTANCE")
                 imported_obj = context.object
             except:
+                # something went wrong while importing
                 print("Import of {} failed.".format(prm_fname))
-                fails.append(prm_fname)
+                fails.append(prm_name)
         else:
-            print("Could not find", prm_name)
+            fails.append(prm_name)
 
         if imported_obj:
             imported_obj.matrix_world = helpers.to_trans_matrix(rot_matrix)
@@ -92,6 +94,7 @@ def load_fin_file(filepath, matrix):
             imported_obj.revolt.fin_flag_no_camera_coll = bool(flag & const.FIN_NO_OBJECT_COLLISION)
             imported_obj.revolt.fin_flag_no_object_coll = bool(flag & const.FIN_NO_CAMERA_COLLISION)
             imported_obj.parent = fin_parent
+
     if fails:
         helpers.msg_box("The following instances could not be imported:{}".format(
                         *["\n"+fail for fail in fails]))
