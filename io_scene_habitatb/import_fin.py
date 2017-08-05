@@ -27,7 +27,7 @@ def load_fin_file(filepath, matrix):
     context = bpy.context
     folder = os.sep.join(filepath.split(os.sep)[:-1])
 
-    context.space_data.show_relationship_lines = False
+    # context.space_data.show_relationship_lines = False
 
     fin_parent = bpy.data.objects.new(name=filepath.split(os.sep)[-1], object_data=None)
     bpy.context.scene.objects.link(fin_parent)
