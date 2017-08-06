@@ -33,15 +33,22 @@ def load_fin_file(filepath, context, matrix):
         folder = os.sep.join(filepath.split(os.sep)[:-2])
 
     # hide the relationship lines because they're not easy on the eyes
+    # this doesn't work with the context of the file menu, obviously
+    # I think it's better to add it as an option in the side panel.
     # context.space_data.show_relationship_lines = False
 
-    """ Create an empty object and parent all instance objects to it.
-    This is done to prevent clutter in the object outliner. """
+
+    # read amount of instances
+    instance_count = struct.unpack('<L', file.read(4))[0]
+
+    if instance_count == 0:
+        helpers.msg_box(const.STR_EMPTY_FIN)
+        return 0
+
+    # Create an empty object and parent all instance objects to it.
+    # This is done to prevent clutter in the object outliner.
     fin_parent = bpy.data.objects.new(name=filepath.split(os.sep)[-1], object_data=None)
     bpy.context.scene.objects.link(fin_parent)
-
-    # read header
-    instance_count = struct.unpack('<L', file.read(4))[0]
 
     for instance in range(instance_count):
         # get the file name of the instance
@@ -55,7 +62,7 @@ def load_fin_file(filepath, context, matrix):
         blue_env, green_env, red_env, alpha_env = struct.unpack('<4B', file.read(4))
 
         # other props
-        priority, flag = struct.unpack('<BBxx', file.read(4))
+        priority, flag = struct.unpack('<BBxx', file.read(4)) # two bytes with padding
         lod_bias = struct.unpack('<f', file.read(4))[0]
         pos = Vector(struct.unpack("<3f", file.read(12)))
         rot_matrix = Matrix((struct.unpack('<3f', file.read(12)),
