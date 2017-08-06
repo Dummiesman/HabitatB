@@ -153,7 +153,6 @@ def load_w_file(file, matrix):
             except ValueError as e:
                 print(e)
 
-
         # calculate normals
         bm.normal_update()
 

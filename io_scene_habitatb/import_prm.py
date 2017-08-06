@@ -129,6 +129,7 @@ def load_prm_file(file, matrix, texfile, rvtype=None):
                     texture_path = os.sep.join([*path[:-1], texture_name])
                     if os.path.exists(texture_path):
                         image = bpy.data.images.load(texture_path)
+                        image.use_fake_user = True
                     else:
                         print("Texture not found: ", texture_path, "Number", texture)
 
@@ -151,7 +152,7 @@ def load_prm_file(file, matrix, texfile, rvtype=None):
     bm.to_mesh(me)
     bm.free()
 
-    # set new object type to mesh
+    # set new object type to mesh or something else if specified
     if rvtype:
         ob.revolt.rv_type = rvtype
     else:

@@ -20,15 +20,23 @@ export_filename = None
 ######################################################
 # IMPORT MAIN FILES
 ######################################################
-def load_fin_file(filepath, matrix):
+def load_fin_file(filepath, context, matrix):
     fails = [] # failed import names
     file = open(filepath, 'rb')
     scn = bpy.context.scene
     context = bpy.context
     folder = os.sep.join(filepath.split(os.sep)[:-1])
 
+    # check for reversed folder
+    if folder.split(os.sep)[-1] == "reversed":
+        print("Reversed folder detected.")
+        folder = os.sep.join(filepath.split(os.sep)[:-2])
+
+    # hide the relationship lines because they're not easy on the eyes
     # context.space_data.show_relationship_lines = False
 
+    """ Create an empty object and parent all instance objects to it.
+    This is done to prevent clutter in the object outliner. """
     fin_parent = bpy.data.objects.new(name=filepath.split(os.sep)[-1], object_data=None)
     bpy.context.scene.objects.link(fin_parent)
 
@@ -43,7 +51,7 @@ def load_fin_file(filepath, matrix):
 
         # get the model color
         red_col, green_col, blue_col = struct.unpack('<3B', file.read(3))
-        # get the env color of the instance
+        # get the env color of the instance, includes alpha
         blue_env, green_env, red_env, alpha_env = struct.unpack('<4B', file.read(4))
 
         # other props
@@ -63,6 +71,7 @@ def load_fin_file(filepath, matrix):
 
         imported_obj = None
         if prm_fname in [ob.name for ob in context.scene.objects]:
+            # if the PRM has been imported already, use the object data of the existing object instead
             ob_data = context.scene.objects[prm_fname].data
             imported_obj = bpy.data.objects.new(name=prm_fname, object_data=ob_data)
             imported_obj.revolt.rv_type = "INSTANCE"
@@ -77,9 +86,12 @@ def load_fin_file(filepath, matrix):
                 print("Import of {} failed.".format(prm_fname))
                 fails.append(prm_name)
         else:
+            # the file could not be found
+            print("Import of {} failed because it was not found.".format(prm_fname))
             fails.append(prm_name)
 
         if imported_obj:
+            # set all properties and flags
             imported_obj.matrix_world = helpers.to_trans_matrix(rot_matrix)
             imported_obj.location = pos*matrix
             imported_obj.revolt.fin_priority = priority
@@ -93,6 +105,8 @@ def load_fin_file(filepath, matrix):
             imported_obj.revolt.fin_flag_no_lights = bool(flag & const.FIN_NO_LIGHTS)
             imported_obj.revolt.fin_flag_no_camera_coll = bool(flag & const.FIN_NO_OBJECT_COLLISION)
             imported_obj.revolt.fin_flag_no_object_coll = bool(flag & const.FIN_NO_CAMERA_COLLISION)
+
+            # set the object's parent to the empty fin object
             imported_obj.parent = fin_parent
 
     if fails:
@@ -110,7 +124,7 @@ def load_fin(filepath, context, matrix):
     time1 = time.clock()
 
     # start reading the fin file
-    load_fin_file(filepath, matrix)
+    load_fin_file(filepath, context, matrix)
 
     print(" done in %.4f sec." % (time.clock() - time1))
 
