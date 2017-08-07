@@ -36,13 +36,10 @@ from bpy.props import (
         FloatVectorProperty,
         PointerProperty
         )
-from bpy_extras.io_utils import (
-        ImportHelper,
-        ExportHelper,
-        )
-from . import io_ops, helpers, ui, parameters, const
 
-from bpy_extras.io_utils import ImportHelper, ExportHelper, axis_conversion
+from . import io_ops, helpers, panels, parameters, const
+
+from bpy_extras.io_utils import axis_conversion
 
 # Completely reload the addon when hitting F8:
 locals_copy = dict(locals())
