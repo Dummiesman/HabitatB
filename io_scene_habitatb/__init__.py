@@ -40,7 +40,7 @@ from bpy_extras.io_utils import (
         ImportHelper,
         ExportHelper,
         )
-from . import io_ops, helpers, ui, parameters, const
+from . import io_ops, helpers, panels, parameters, const
 
 from bpy_extras.io_utils import ImportHelper, ExportHelper, axis_conversion
 
@@ -202,7 +202,6 @@ def register():
     bpy.types.INFO_MT_file_export.append(menu_func_export_w)
     bpy.types.INFO_MT_file_export.append(menu_func_export_fin)
 
-    #bpy.types.Scene.ui_properties = bpy.props.PointerProperty(type=ui.UIProperties)
 
     bpy.types.Object.revolt = PointerProperty(type = RevoltObjectProperties)
     bpy.types.Mesh.revolt = PointerProperty(type = RevoltMeshProperties)
@@ -225,7 +224,6 @@ def unregister():
     bpy.types.INFO_MT_file_export.remove(menu_func_export_prm)
     bpy.types.INFO_MT_file_export.remove(menu_func_export_fin)
 
-    # del bpy.types.Scene.ui_properties
 
     del bpy.types.Object.revolt
     del bpy.types.Mesh.revolt
