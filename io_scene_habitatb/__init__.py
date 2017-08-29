@@ -36,10 +36,16 @@ from bpy.props import (
         FloatVectorProperty,
         PointerProperty
         )
+from bpy_extras.io_utils import (
+        ImportHelper,
+        ExportHelper,
+        )
+from . import io_ops, helpers, ui, parameters, const
 
-from . import io_ops, helpers, panels, parameters, const
+from bpy_extras.io_utils import ImportHelper, ExportHelper, axis_conversion
 
-from bpy_extras.io_utils import axis_conversion
+from bpy.app.handlers import persistent
+
 
 # Completely reload the addon when hitting F8:
 locals_copy = dict(locals())
@@ -165,6 +171,21 @@ def menu_func_export_fin(self, context):
 # CAR
 def menu_func_import_car(self, context):
     self.layout.operator(io_ops.ImportCAR.bl_idname, text="Re-Volt Car (parameters.txt)")
+global_dict = {}
+
+@persistent
+def edit_object_change_handler(scene):
+    """ For accessing and chaning custom layers from the panels """
+    obj = scene.objects.active
+    if obj is None:
+        return None
+
+    if obj.mode == 'EDIT' and obj.type == 'MESH':
+        global_dict.setdefault(obj.name, bmesh.from_edit_mesh(obj.data))
+        return None
+
+    global_dict.clear()
+    return None
 
 def register():
     bpy.utils.register_module(__name__)
@@ -185,6 +206,9 @@ def register():
 
     bpy.types.Object.revolt = PointerProperty(type = RevoltObjectProperties)
     bpy.types.Mesh.revolt = PointerProperty(type = RevoltMeshProperties)
+
+    bpy.app.handlers.scene_update_post.append(edit_object_change_handler)
+
 
 def unregister():
     bpy.utils.unregister_module(__name__)

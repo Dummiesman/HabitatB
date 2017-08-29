@@ -22,23 +22,7 @@ from bpy.props import (
         CollectionProperty,
         )
 
-flag_names = ["Double-Sided", "Transparent", "Alpha or Additive", "No EnvMap", "EnvMap"]
-flag_descr = ["Set to make the polygon visible from both sides.",
-            "Set to enable transparency for this polygon. Re-Volt will then apply transparency from the texture and the alpha vertex color channel.",
-            "Set to make Re-Volt render this polygon with alpha transparency from the texture or use additive blending (dark colors become transparent, brighter colors lighten/glow).",
-            "Set to disable the environment map (don't make the polygon shiny, e.g. for the underside of cars)."
-            "Set to enable the environment map (make the polygon shiny)."]
-
-
-flags = [0x002, 0x004, 0x100, 0x200, 0x400, 0x800]
-
-
 prop_states = [0, 0, 0, 0, 0, 0]
-
-# class UIProperties(bpy.types.PropertyGroup):
-#     rv_type = bpy.props.EnumProperty(
-#         items = None, update = lambda self, context: set_rv_type(self, context, 'rv_type')
-#     )
 
 # main panel for selecting the object type
 class RevoltTypePanel(bpy.types.Panel):
@@ -46,6 +30,10 @@ class RevoltTypePanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
+
+    @classmethod
+    def poll(self, context):
+        return (context.object is not None)
 
     def draw(self, context):
         self.layout.prop(context.object.revolt, "rv_type")
@@ -73,7 +61,6 @@ class RevoltTypePanel(bpy.types.Panel):
 
         box = self.layout.box()
         box.label(text="Additionally export as:")
-        # self.layout.prop(context.object.revolt, "export_as_prm") makes no sense to have
         if rvtype in ["OBJECT", "WORLD", "MESH", "NONE", "INSTANCE", "NCP"]:
             box.prop(context.object.revolt, "export_as_w", text="W (World)")
 
@@ -93,16 +80,17 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
     selection = None
     selected_face_count = None
 
-    # @classmethod
-    # def poll(self, context):
-    #     return context.object.type == "MESH"
+    @classmethod
+    def poll(self, context):
+        return (context.object is not None)
 
     def draw(self, context):
+        pass
         obj = context.object
         mesh = obj.data
         bm = bmesh.from_edit_mesh(mesh)
-        flags = bm.faces.layers.int.get("Flags") or bm.faces.layers.int.new("Flags")
-        texture = bm.faces.layers.int.get("Texture") or bm.faces.layers.int.new("Texture")
+        flags = bm.faces.layers.int.get("RVFlags") or bm.faces.layers.int.new("RVFlags")
+        texture = bm.faces.layers.int.get("RVTexture") or bm.faces.layers.int.new("RVTexture")
         if self.selected_face_count is None or self.selected_face_count != mesh.total_face_sel:
             self.selected_face_count = mesh.total_face_sel
             self.selection = [face for face in bm.faces if face.select]
@@ -114,7 +102,6 @@ class RevoltFacePropertiesPanel(bpy.types.Panel):
             for x in range(len(const.FACE_PROPS)):
                 if face[flags] & const.FACE_PROPS[x]:
                     count[x] += 1
-
 
         rvtype = context.object.revolt.rv_type
         if rvtype in ["NCP"] or context.object.revolt.export_as_ncp:
