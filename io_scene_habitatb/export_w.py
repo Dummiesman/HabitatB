@@ -83,7 +83,7 @@ def save_w_file(file, matrix):
             # get flags
             # figure out whether the face is quad
             is_quad = len(face.verts) > 3
-        
+
             # set the quad-flag if the poly is quadratic
             if is_quad:
                 face[flag_layer] |= const.FACE_QUAD
@@ -133,7 +133,7 @@ def save_w_file(file, matrix):
         # export vertex positions and normals
         for vertex in bm.verts:
             coord = Vector((vertex.co[0], vertex.co[1], vertex.co[2])) * matrix
-            normal = Vector((vertex.normal[0], vertex.normal[1], vertex.normal[2])) * matrix
+            normal = Vector((vertex.normal[0], -vertex.normal[2], vertex.normal[1]))
             file.write(struct.pack("<fff", *coord))
             file.write(struct.pack("<fff", *normal))
 
